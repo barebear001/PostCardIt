@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E05B18722DC6A9D8000242A9 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = E05B18712DC6A9D8000242A9 /* .gitignore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		E084AC9F2D8641E60039296E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E05B18712DC6A9D8000242A9 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		E084AC8E2D8641E50039296E /* PostCardIt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PostCardIt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E084AC9E2D8641E60039296E /* PostCardItTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PostCardItTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E084ACA82D8641E60039296E /* PostCardItUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PostCardItUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -79,6 +84,7 @@
 				E084ACA12D8641E60039296E /* PostCardItTests */,
 				E084ACAB2D8641E60039296E /* PostCardItUITests */,
 				E084AC8F2D8641E50039296E /* Products */,
+				E05B18712DC6A9D8000242A9 /* .gitignore */,
 			);
 			sourceTree = "<group>";
 		};
@@ -111,8 +117,6 @@
 				E084AC902D8641E50039296E /* PostCardIt */,
 			);
 			name = PostCardIt;
-			packageProductDependencies = (
-			);
 			productName = PostCardIt;
 			productReference = E084AC8E2D8641E50039296E /* PostCardIt.app */;
 			productType = "com.apple.product-type.application";
@@ -134,8 +138,6 @@
 				E084ACA12D8641E60039296E /* PostCardItTests */,
 			);
 			name = PostCardItTests;
-			packageProductDependencies = (
-			);
 			productName = PostCardItTests;
 			productReference = E084AC9E2D8641E60039296E /* PostCardItTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -157,8 +159,6 @@
 				E084ACAB2D8641E60039296E /* PostCardItUITests */,
 			);
 			name = PostCardItUITests;
-			packageProductDependencies = (
-			);
 			productName = PostCardItUITests;
 			productReference = E084ACA82D8641E60039296E /* PostCardItUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -212,6 +212,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E05B18722DC6A9D8000242A9 /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,7 +396,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"PostCardIt/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 83YXF75KK9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -424,7 +425,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"PostCardIt/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 83YXF75KK9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
