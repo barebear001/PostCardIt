@@ -22,9 +22,3 @@ struct SplashScreen: View {
         }
     }
 }
-
-struct SplashScreen_Preview: PreviewProvider {
-    static var previews: some View {
-        SplashScreen()
-    }
-}
