@@ -107,5 +107,10 @@ struct LoginView: View {
     }
 }
 
-//struct LoginView_Previews: PreviewProvider {
-    
+#Preview {
+    let mockAuthService = CognitoAuthService()
+
+    LoginView()
+        .environmentObject(mockAuthService)
+}
+
