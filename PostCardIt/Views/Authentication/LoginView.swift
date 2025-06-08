@@ -54,8 +54,10 @@ struct LoginView: View {
                     }
                     
                     Button(action: {
-                        authService.signIn(username: username, password: password) { _ in
+                        authService.signIn(username: username, password: password) { success in
                             // Handle success in environment object
+//                            print("Login success: \(success)")
+//                            print("Is authenticated: \(authService.isAuthenticated)")
                         }
                     }) {
                         if authService.isLoading {

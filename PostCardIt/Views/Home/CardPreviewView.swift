@@ -89,5 +89,6 @@ struct CardPreviewView: View {
 }
 
 //#Preview {
-//    CardPreviewView()
+//    CardPreviewView(isReceived: true, postcard: Postcard(
+//        
 //}

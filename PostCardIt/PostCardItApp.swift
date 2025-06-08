@@ -31,21 +31,6 @@ struct PostCardItApp: App {
     }
 }
 
-// PostcardPreviewView.swift
-struct PostcardPreviewView: View {
-    let index: Int
-    
-    var body: some View {
-        RoundedRectangle(cornerRadius: 10)
-            .fill(Color.gray.opacity(0.2))
-            .aspectRatio(1.4, contentMode: .fit)
-            .overlay(
-                Text("Postcard \(index + 1)")
-                    .foregroundColor(.gray)
-            )
-    }
-}
-
 // ImagePicker.swift
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var selectedImage: UIImage?
@@ -174,3 +159,4 @@ struct FAQDetailView: View {
 //        ProfileView()
 //    }
 //}
+
