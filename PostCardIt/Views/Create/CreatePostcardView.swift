@@ -20,159 +20,182 @@ struct CreatePostcardView: View {
     
     let countries = ["United States", "Canada", "Mexico", "Brazil", "France", "Japan", "Australia", "United Kingdom", "Germany", "Italy", "Spain", "China", "India", "Russia"]
     
+//    let columns = Array(repeating: GridItem(.fixed(80), spacing: 0), count: 3)
+
+    
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: 10) {
+                    HStack {
+                            NavigationLink(destination: MainTabView()) {
+                                Image("create_top_button")
+                            }
+                            Spacer()
+                            Image("create_top_right_1")
+                    }.padding(.horizontal)
+                    
                     // Selected Photo Preview at Top
-                    VStack {
-                        Text("Selected Photo")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                    if let selectedImage = selectedImage {
+                        Image(uiImage: selectedImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 300)
+                            .shadow(radius: 4)
                             .padding(.horizontal)
-                        
-                        if let selectedImage = selectedImage {
-                            Image(uiImage: selectedImage)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 200)
-                                .cornerRadius(12)
-                                .shadow(radius: 4)
-                                .padding(.horizontal)
-                        } else {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(height: 200)
-                                .cornerRadius(12)
-                                .overlay(
-                                    VStack {
-                                        Image(systemName: "photo")
-                                            .font(.system(size: 40))
-                                            .foregroundColor(.gray)
-                                        Text("No photo selected")
-                                            .foregroundColor(.gray)
-                                    }
-                                )
-                                .padding(.horizontal)
-                        }
+                    } else {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 300)
+                            .overlay(
+                                VStack {
+                                    Image(systemName: "photo")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(.gray)
+                                    Text("No photo selected")
+                                        .foregroundColor(.gray)
+                                }
+                            )
+                            .padding(.horizontal)
                     }
                     
                     // Form Section
-                    VStack(spacing: 16) {
-                        // Recipient Section
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Recipient")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            
-                            TextField("Recipient Name", text: $recipientName)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                            
-                            Picker("Country", selection: $selectedCountry) {
-                                ForEach(countries, id: \.self) {
-                                    Text($0)
-                                }
-                            }
-                            .pickerStyle(MenuPickerStyle())
-                        }
-                        .padding(.horizontal)
-                        
-                        // Message Section
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Message")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            
-                            TextEditor(text: $message)
-                                .frame(height: 100)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                        }
-                        .padding(.horizontal)
-                        
-                        // Error/Loading States
-                        if postcardService.isLoading {
-                            HStack {
-                                Spacer()
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                Spacer()
-                            }
-                        } else if !postcardService.errorMessage.isEmpty {
-                            Text(postcardService.errorMessage)
-                                .foregroundColor(.red)
-                                .font(.caption)
-                                .padding(.horizontal)
-                        }
-                        
-                        // Preview Button
-                        Button("Preview Postcard") {
-                            isShowingPreview = true
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .disabled(message.isEmpty || recipientName.isEmpty || postcardService.isLoading)
-                        .padding(.horizontal)
-                    }
+//                    VStack(spacing: 16) {
+//                        // Recipient Section
+//                        VStack(alignment: .leading, spacing: 8) {
+//                            Text("Recipient")
+//                                .font(.headline)
+//                                .frame(maxWidth: .infinity, alignment: .leading)
+//                            
+//                            TextField("Recipient Name", text: $recipientName)
+//                                .textFieldStyle(RoundedBorderTextFieldStyle())
+//                            
+//                            Picker("Country", selection: $selectedCountry) {
+//                                ForEach(countries, id: \.self) {
+//                                    Text($0)
+//                                }
+//                            }
+//                            .pickerStyle(MenuPickerStyle())
+//                        }
+//                        .padding(.horizontal)
+//                        
+//                        // Message Section
+//                        VStack(alignment: .leading, spacing: 8) {
+//                            Text("Message")
+//                                .font(.headline)
+//                                .frame(maxWidth: .infinity, alignment: .leading)
+//                            
+//                            TextEditor(text: $message)
+//                                .frame(height: 100)
+//                                .overlay(
+//                                    RoundedRectangle(cornerRadius: 8)
+//                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+//                                )
+//                        }
+//                        .padding(.horizontal)
+//                        
+//                        // Error/Loading States
+//                        if postcardService.isLoading {
+//                            HStack {
+//                                Spacer()
+//                                ProgressView()
+//                                    .progressViewStyle(CircularProgressViewStyle())
+//                                Spacer()
+//                            }
+//                        } else if !postcardService.errorMessage.isEmpty {
+//                            Text(postcardService.errorMessage)
+//                                .foregroundColor(.red)
+//                                .font(.caption)
+//                                .padding(.horizontal)
+//                        }
+//                        
+//                        // Preview Button
+//                        Button("Preview Postcard") {
+//                            isShowingPreview = true
+//                        }
+//                        .frame(maxWidth: .infinity)
+//                        .padding()
+//                        .background(Color.blue)
+//                        .foregroundColor(.white)
+//                        .cornerRadius(10)
+//                        .disabled(message.isEmpty || recipientName.isEmpty || postcardService.isLoading)
+//                        .padding(.horizontal)
+//                    }
+                    
                     
                     // Photo Album Section at Bottom
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Choose Photo")
+                    VStack(spacing: 5) {
+                        Text("Recents")
                             .font(.headline)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal)
                         
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                // Camera Button (First Item)
-                                Button(action: {
-                                    showCamera = true
-                                }) {
-                                    ZStack {
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color.blue.opacity(0.1))
-                                            .frame(width: 80, height: 80)
-                                        
-                                        Image(systemName: "camera.fill")
-                                            .font(.system(size: 30))
-                                            .foregroundColor(.blue)
-                                    }
+                        Divider()
+                    }
+//
+//                        LazyVGrid(columns: columns, spacing: 0) {
+//                            CameraButtonView(showCamera: $showCamera)
+//
+//                            
+//                            // Album Photos
+//                            ForEach(Array(albumImages.enumerated()), id: \.offset) { index, image in
+//                                PhotoCellView(image: image, selectedImage: $selectedImage)
+//                            }
+//                        }
+//                        .padding(.horizontal)
+                    VStack {
+                        GeometryReader { geometry in
+                            let columnsCount = 4
+                            let cellSize = geometry.size.width / CGFloat(columnsCount)
+                            let columns = Array(repeating: GridItem(.fixed(cellSize), spacing: 2), count: columnsCount)
+                            
+                            LazyVGrid(columns: columns, spacing: 0) {
+                                // Camera button
+                                Button(action: { showCamera = true }) {
+                                    Rectangle()
+                                        .fill(Color.white)
+                                        .frame(width: cellSize, height: cellSize)
+                                        .border(Color.black)
+                                        .overlay(
+                                            Image("camera")
+                                                .font(.system(size: cellSize * 0.4))
+                                                .foregroundColor(.white)
+                                        )
                                 }
                                 
-                                // Album Photos
+                                // Photo cells
                                 ForEach(Array(albumImages.enumerated()), id: \.offset) { index, image in
-                                    Button(action: {
-                                        selectedImage = image
-                                    }) {
+                                    Button(action: { selectedImage = image }) {
                                         Image(uiImage: image)
                                             .resizable()
                                             .scaledToFill()
-                                            .frame(width: 80, height: 80)
+                                            .frame(width: cellSize, height: cellSize)
                                             .clipped()
-                                            .cornerRadius(12)
                                             .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
+                                                RoundedRectangle(cornerRadius: 8)
                                                     .stroke(
                                                         selectedImage == image ? Color.blue : Color.clear,
-                                                        lineWidth: 3
+                                                        lineWidth: 2
                                                     )
                                             )
                                     }
                                 }
                             }
-                            .padding(.horizontal)
                         }
                     }
+                    .frame(height: 200)
+                    .padding(.horizontal)
                     
-                    Spacer(minLength: 20)
+                    
+                    HStack {
+                        Spacer()
+                        NavigationLink(destination: PostcardWritingView()) {
+                            Image("next_button")
+                        }
+                    }.padding(.horizontal)
+                        .padding(.bottom, 20)
                 }
             }
-            .navigationTitle("Create Postcard")
             .sheet(isPresented: $showImagePicker) {
                 ImagePicker(selectedImage: $selectedImage)
             }
@@ -194,6 +217,7 @@ struct CreatePostcardView: View {
                 loadUserInfo()
                 requestPhotoLibraryPermission()
             }
+            .toolbar(.hidden, for: .tabBar)
         }
     }
     
@@ -258,6 +282,53 @@ struct CreatePostcardView: View {
         
         group.notify(queue: .main) {
             self.albumImages = images
+        }
+    }
+}
+
+// Break into separate views
+struct CameraButtonView: View {
+    @Binding var showCamera: Bool
+    
+    var body: some View {
+        Button(action: {
+            showCamera = true
+        }) {
+            ZStack {
+                Rectangle()
+                    .fill(Color.white)
+                    .frame(width: 80, height: 80)
+                    .cornerRadius(8)
+                    .border(Color.black)
+                
+                Image("camera")
+                    .font(.system(size: 30))
+                    .foregroundColor(.white)
+            }
+        }
+    }
+}
+
+struct PhotoCellView: View {
+    let image: UIImage
+    @Binding var selectedImage: UIImage?
+    
+    var body: some View {
+        Button(action: {
+            selectedImage = image
+        }) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 80, height: 80)
+                .clipped()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(
+                            selectedImage == image ? Color.blue : Color.clear,
+                            lineWidth: 3
+                        )
+                )
         }
     }
 }

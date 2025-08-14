@@ -5,6 +5,7 @@
 //  Created by Taiyue Liu on 5/3/25.
 //
 import SwiftUI
+import MapKit
 
 // HomeView.swift
 struct HomeView: View {
@@ -13,11 +14,16 @@ struct HomeView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: -50) {
                 // World Map with illustrations
-            MapPreviewView()
+//            MapPreviewView()
+//                .frame(height: 400)
+//                .frame(maxWidth: .infinity) // Ensures full width
+//                .clipped() // Clips any overflow
+//                .ignoresSafeArea(edges: [.horizontal, .top]) // Extends to screen edges and top
+            Map()
                 .frame(height: 400)
-                .frame(maxWidth: .infinity) // Ensures full width
-                .clipped() // Clips any overflow
-                .ignoresSafeArea(edges: [.horizontal, .top]) // Extends to screen edges and top
+                .frame(maxWidth: .infinity)
+                .clipped()
+                .ignoresSafeArea(edges: [.horizontal, .top])
 
             ScrollView {
                 MasonryGrid(items: PostcardData.sampleData, columns: 2, spacing: 16) { postcard in

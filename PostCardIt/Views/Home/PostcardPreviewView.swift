@@ -29,7 +29,7 @@ struct PostcardPreviewView: View {
     let postcard: PostcardData
     
     var body: some View {
-        RoundedRectangle(cornerRadius: 10)
+        Rectangle()
             .fill(Color.gray.opacity(0.2))
             .aspectRatio(postcard.aspectRatio, contentMode: .fit)
             .overlay(

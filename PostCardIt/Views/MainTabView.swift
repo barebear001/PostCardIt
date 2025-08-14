@@ -23,7 +23,9 @@ struct MainTabView: View {
                     .tag(4)
             }
             
-            CustomTabBar(selectedTab: $selectedTab)
+            if selectedTab == 0 || selectedTab == 1 || selectedTab == 3 {
+                CustomTabBar(selectedTab: $selectedTab)
+            }
         }
         .edgesIgnoringSafeArea(.bottom)
     }

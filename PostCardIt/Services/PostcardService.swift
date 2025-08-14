@@ -16,7 +16,7 @@ class PostcardService: ObservableObject {
     @Published var errorMessage = ""
     
     // S3 configuration
-    private let bucketName = "YOUR_S3_BUCKET_NAME"
+    private let bucketName = "postcard-it-beta"
     private let region: AWSRegionType = .USEast1 // Change to your region
     
     // AWS DynamoDB or API Gateway endpoint for postcard data
