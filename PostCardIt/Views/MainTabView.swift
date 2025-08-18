@@ -38,64 +38,62 @@ struct CustomTabBar: View {
         TabItem(icon: "home_button", title: "Home"),
         TabItem(icon: "map_button", title: "Map"),
         TabItem(icon: "create_button", title: "Create"),
-        TabItem(icon: "my_card_button", title: "Cards"),
+        TabItem(icon: "my_card_button", title: "My Cards"),
         TabItem(icon: "me_button", title: "Me")
     ]
     
     var body: some View {
-        HStack {
+        HStack(spacing: 0) {
             ForEach(0..<tabItems.count, id: \.self) { index in
                 let item = tabItems[index]
                 
                 Button(action: {
                     selectedTab = index
                 }) {
-                    VStack(spacing: 4) {
+                    VStack(spacing: index == 2 ? -10 : 4) {
                         ZStack {
-                            // Yellow highlight box for selected tab
-                        
                             if index == 2 {
-                                if selectedTab == index {
-                                    Rectangle()
-                                        .fill(Color.yellow)
-                                        .frame(width: 60, height: 60)
-                                        .cornerRadius(8)
-                                }
-                            
-                                Image(item.icon)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 50, height: 50)
-                            }
-                            else {
-                                if selectedTab == index {
-                                    Rectangle()
-                                        .fill(Color.yellow)
-                                        .frame(width: 45, height: 45)
-                                        .cornerRadius(8)
-                                }
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color(red: 1.0, green: 0.905, blue: 0.384))
+                                    .frame(width: 68, height: 43)
+                                    .rotationEffect(.degrees(-15))
+                                    .shadow(color: Color.black.opacity(0.15), radius: 2, x: 0, y: -2)
+                                    .position(x: 35, y: 5)
                                 
                                 Image(item.icon)
                                     .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 25, height: 25)
+//                                    .scaledToFit()
+                                    .frame(width: 15, height: 36)
+                                    .rotationEffect(.degrees(11.58))
+                                    .position(x: 35, y: 5)
+                            } else {
+                                Image(item.icon)
+                                    .resizable()
+//                                    .scaledToFit()
+                                    .frame(width: index == 3 ? 27 : 26, height: index == 3 ? 21 : 21)
                             }
                         }
+                        .frame(height: index == 2 ? 50 : 36)
                         
-                        Text(item.title)
-                            .font(.system(size: 12))
+                        HStack {
+                            Text(item.title)
+                                .font(.custom("Kalam-Regular", size: 10))
+                                .foregroundColor(.black)
+                        }
                     }
-                    .foregroundColor(selectedTab == index ? .blue : .gray)
                     .frame(maxWidth: .infinity)
                 }
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
         .background(Color.white)
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: -5)
-        .padding(.horizontal)
+        .overlay(
+            Rectangle()
+                .frame(height: 2)
+                .foregroundColor(.black),
+            alignment: .bottom
+        )
     }
 }
 

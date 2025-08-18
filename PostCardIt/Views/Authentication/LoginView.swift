@@ -30,16 +30,17 @@ struct LoginView: View {
                             
                             VStack(spacing: 20) {
                                 // App title with icon
-                                HStack(spacing: 8) {
+                                HStack(spacing: 2) {
                                     Image("login_postii_icon")
                                         .resizable()
                                         .aspectRatio(contentMode: .fit)
-                                        .frame(width: 24, height: 22)
+                                        .frame(width: 26, height: 18)
                                         .rotationEffect(.degrees(-35))
                                     
                                     Text("Postii")
                                         .font(.custom("Kalam-Regular", size: 24))
                                         .foregroundColor(.black)
+                                    
                                 }
                                 .padding(.top, 20)
                                 
