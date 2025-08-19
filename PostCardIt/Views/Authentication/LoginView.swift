@@ -199,13 +199,6 @@ struct LoginView: View {
                         Spacer(minLength: 50)
                     }
                 }
-                
-                // Home indicator
-                Rectangle()
-                    .fill(Color.black)
-                    .frame(width: 138.5, height: 5)
-                    .cornerRadius(2.5)
-                    .padding(.bottom, 9)
             }
         }
         .sheet(isPresented: $showingRegistration) {

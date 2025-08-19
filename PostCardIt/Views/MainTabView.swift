@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @State private var showingCreateView = false
     @EnvironmentObject var authService: CognitoAuthService
     
     var body: some View {
@@ -13,8 +14,11 @@ struct MainTabView: View {
                 MapView()
                     .tag(1)
                 
-                CreatePostcardView()
+                Color.clear
                     .tag(2)
+                    .onAppear {
+                        showingCreateView = true
+                    }
                 
                 MyCardsView()
                     .tag(3)
@@ -23,11 +27,23 @@ struct MainTabView: View {
                     .tag(4)
             }
             
-            if selectedTab == 0 || selectedTab == 1 || selectedTab == 3 {
+            if selectedTab == 0 || selectedTab == 1 || selectedTab == 3 || selectedTab == 4 {
                 CustomTabBar(selectedTab: $selectedTab)
             }
         }
         .edgesIgnoringSafeArea(.bottom)
+        .sheet(isPresented: $showingCreateView) {
+            CreatePostcardView(selectedTab: $selectedTab)
+        }
+        .onChange(of: selectedTab) { newValue in
+            if newValue == 2 {
+                showingCreateView = true
+                // Reset to previous tab after triggering the sheet
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    selectedTab = 0
+                }
+            }
+        }
     }
 }
 

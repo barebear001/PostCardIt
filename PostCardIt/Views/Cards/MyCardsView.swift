@@ -39,7 +39,7 @@ struct MyCardsView: View {
                             .foregroundColor(.gray)
                         
                         if selectedTab == 1 {
-                            NavigationLink(destination: CreatePostcardView()) {
+                            NavigationLink(destination: CreatePostcardView(selectedTab: $selectedTab)) {
                                 Text("Create a Postcard")
                                     .foregroundColor(.white)
                                     .padding()
@@ -105,7 +105,7 @@ struct MyCardsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if selectedTab == 1 {
-                        NavigationLink(destination: CreatePostcardView()) {
+                        NavigationLink(destination: CreatePostcardView(selectedTab: $selectedTab)) {
                             Image(systemName: "plus")
                         }
                     }
