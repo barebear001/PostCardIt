@@ -142,6 +142,14 @@ struct PostcardPreviewDetailView: View {
 }
 
 
-//#Preview {
-//    PostcardPreviewDetailView()
-//}
+#Preview {
+    PostcardPreviewDetailView(
+        country: "Japan",
+        message: "Greetings from Tokyo! The cherry blossoms are absolutely stunning this time of year. The city is vibrant and full of life. Can't wait to share more stories when I get back!",
+        image: UIImage(systemName: "photo"),
+        senderName: "Alex Johnson",
+        recipientName: "Sarah Davis",
+        postcardService: PostcardService(),
+        authService: CognitoAuthService()
+    )
+}

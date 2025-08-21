@@ -7,140 +7,129 @@ struct CreatePostcardPreviewView: View {
     let selectedStamp: StampModel?
     let currentLocation: String
     let timestamp: Date
+    let selectedImage: UIImage?
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 50) { // Negative spacing for overlap
-                // Back of Postcard (rotated 20 degrees)
-                PostcardBackView(
-                    messageText: messageText,
-                    font: selectedFont,
-                    timestamp: timestamp,
-                    location: currentLocation,
-                    selectedStamp: selectedStamp
-                )
-                .rotationEffect(.degrees(-20))
-                .padding(.horizontal, 20)
-                .padding(.top, 50)
-                .zIndex(1) // Make sure back is above front
+        VStack(spacing: -40) {
+            // Header with back button and decorative elements
+            HStack {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(.black)
+                        .frame(width: 42, height: 41)
+                }
                 
-                // Front of Postcard (rotated -20 degrees)
-                PostcardFrontView()
-                    .rotationEffect(.degrees(20))
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 50)
+                Spacer()
+                
+                // Decorative elements from Figma
+                Image("create_top_right_3")
+                    .resizable()
+                    .frame(width: 100, height: 57)
+            }
+            .padding(.horizontal)
+            .frame(height: 102)
+            .background(Color.white)
+            
+            ScrollView {
+                VStack(spacing: 25) { // Reduced overlap spacing for stacked effect
+                    // Back of Postcard (rotated left)
+                    HStack {
+                        Spacer()
+                        PostcardBackView(
+                            messageText: messageText,
+                            font: selectedFont,
+                            timestamp: timestamp,
+                            location: currentLocation,
+                            selectedStamp: selectedStamp
+                        )
+                        .rotationEffect(.degrees(-15))
+                        .padding(.top, 50)
+                        .zIndex(1) // Make sure back is above front
+                        Spacer()
+                    }
+                    .padding(.leading, 50)
+                    .padding(.trailing, 10)
+                    
+                    // Front of Postcard (rotated right)
+                    HStack {
+                        PostcardFrontView(selectedImage: selectedImage)
+                            .rotationEffect(.degrees(15))
+                            .padding(.bottom, 50)
+                        Spacer()
+                    }
+                    .padding(.leading, 0)
+                    .padding(.trailing, 80)
                     .zIndex(2) // Make sure front is below back
                 
-//                Spacer()
-                HStack {
-                    Spacer()
                     // Next Button (Send Postcard)
-                    NavigationLink(destination: SendPostcardView()) {
-                        HStack {
-                            Text("Send")
-                            Image(systemName: "arrow.right")
+                    HStack {
+                        Spacer()
+                        NavigationLink(destination: SendPostcardView()) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 21)
+                                    .fill(Color.yellow)
+                                    .frame(width: 138, height: 42)
+                                
+                                Text("Next")
+                                    .font(.custom("Kalam-Regular", size: 20))
+                                    .foregroundColor(.black)
+                            }
                         }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(Color.green)
-                        .cornerRadius(25)
                     }
-                }
-                .padding(.bottom, 100) // Extra bottom padding to avoid tab bar
+                    .padding(.trailing, 50)
+                    .padding(.top, -10)
+                    .padding(.bottom, 120) // Extra bottom padding to avoid tab bar
             }
             .padding(.vertical, 20)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [Color(.systemGray6), Color(.systemBackground)]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
-//        .edgesIgnoringSafeArea(.bottom)
-//        .navigationTitle("Preview")
-        .navigationBarTitleDisplayMode(.inline)
+        .background(Color.white)
+        .navigationBarHidden(true)
         .toolbar(.hidden, for: .tabBar)
-//        .toolbar {
-//            ToolbarItem(placement: .navigationBarTrailing) {
-//                Button("Share") {
-//                    // Handle sharing functionality
-//                }
-//                .foregroundColor(.blue)
-//            }
-//        }
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
 struct PostcardFrontView: View {
+    let selectedImage: UIImage?
+    
     var body: some View {
-        RoundedRectangle(cornerRadius: 15)
-            .fill(
+        ZStack {
+            // Background with selected image or fallback
+            RoundedRectangle(cornerRadius: 0)
+                .fill(Color.blue)
+            
+            // Use selected image, then try landscape image, then fallback to gradient
+            if let selectedImage = selectedImage {
+                Image(uiImage: selectedImage)
+                    .resizable()
+                    .scaledToFill()
+                    .clipped()
+            } else if let landscapeImage = UIImage(named: "landscape_hawaii") {
+                Image(uiImage: landscapeImage)
+                    .resizable()
+                    .scaledToFill()
+                    .clipped()
+            } else {
+                // Fallback landscape-style gradient
                 LinearGradient(
                     gradient: Gradient(colors: [
+                        Color.blue,
                         Color.blue.opacity(0.8),
-                        Color.purple.opacity(0.6),
-                        Color.pink.opacity(0.4)
+                        Color.green.opacity(0.6)
                     ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
-            )
-            .frame(height: 200)
-            .overlay(
-                RoundedRectangle(cornerRadius: 15)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 2)
-            )
-            .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 6)
-            .overlay(
-                // Front content
-                VStack(spacing: 16) {
-                    // Scenic illustration placeholder
-                    ZStack {
-                        Circle()
-                            .fill(Color.yellow.opacity(0.8))
-                            .frame(width: 40, height: 40)
-                            .offset(x: -30, y: -20)
-                        
-                        Rectangle()
-                            .fill(Color.green.opacity(0.6))
-                            .frame(height: 30)
-                            .cornerRadius(15)
-                            .offset(y: 10)
-                        
-                        Text("🏔️")
-                            .font(.system(size: 30))
-                            .offset(x: 20, y: -10)
-                        
-                        Text("🌲")
-                            .font(.system(size: 20))
-                            .offset(x: -40, y: 5)
-                        
-                        Text("🌲")
-                            .font(.system(size: 24))
-                            .offset(x: 35, y: 8)
-                    }
-                    .frame(height: 80)
-                    
-                    // Location text
-                    Text("Greetings from")
-                        .font(.system(size: 14, weight: .light, design: .serif))
-                        .foregroundColor(.white.opacity(0.9))
-                    
-                    Text("SAN FRANCISCO")
-                        .font(.system(size: 24, weight: .bold, design: .serif))
-                        .foregroundColor(.white)
-                        .tracking(2)
-                    
-                    Text("CALIFORNIA")
-                        .font(.system(size: 16, weight: .medium, design: .serif))
-                        .foregroundColor(.white.opacity(0.9))
-                        .tracking(1)
-                }
-                .padding(20)
-            )
+            }
+        }
+        .frame(width: 344, height: 263)
+        .clipped()
+        .shadow(color: Color.black.opacity(0.25), radius: 3, x: 1, y: 2)
     }
 }
 
@@ -151,9 +140,10 @@ struct CreatePostcardPreviewView_Previews: PreviewProvider {
             CreatePostcardPreviewView(
                 messageText: "Hello from my travels! Having an amazing time exploring new places and meeting wonderful people.",
                 selectedFont: .handwritten,
-                selectedStamp: StampModel(id: "1", name: "Golden Gate", emoji: "🌉", category: .travel),
+                selectedStamp: StampModel(id: "1", name: "Smiley", imageName: "stamp_smiley", category: .featured),
                 currentLocation: "San Francisco, CA",
-                timestamp: Date()
+                timestamp: Date(),
+                selectedImage: UIImage(named: "sample_image1")
             )
         }
     }

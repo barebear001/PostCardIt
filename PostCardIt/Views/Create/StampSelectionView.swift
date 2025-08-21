@@ -5,15 +5,39 @@ struct StampSelectionView: View {
     let selectedFont: PostcardFont
     let currentLocation: String
     let timestamp: Date
-    
+    let selectedImage: UIImage?
+    @Binding var selectedStamp: StampModel?
+    @Environment(\.dismiss) private var dismiss
+
     @State private var selectedStampCategory: StampCategory = .featured
-    @State private var selectedStamp: StampModel? = nil
     
-    // Sample data - you would load this from your data source
     private let stampCategories = StampCategory.allCases
     
     var body: some View {
         VStack(spacing: 0) {
+            // Header with back button and decorative elements
+            HStack {
+                Button(action: {
+                    // Navigation back handled by NavigationView
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.black)
+                        .frame(width: 42, height: 41)
+                }
+                
+                Spacer()
+                
+                // Decorative elements from Figma
+                Image("create_top_right_3")
+                    .resizable()
+                    .frame(width: 100, height: 57)
+            }
+            .padding(.horizontal)
+            .frame(height: 102)
+            .background(Color.white)
+            
             // Postcard View at the top
             VStack {
                 PostcardBackView(
@@ -23,64 +47,57 @@ struct StampSelectionView: View {
                     location: currentLocation,
                     selectedStamp: selectedStamp
                 )
-                .padding(.horizontal, 20)
+                .frame(width: 344, height: 263)
+                .padding(.horizontal, 25)
                 .padding(.top, 20)
             }
-            .background(Color(.systemGray6))
-            .padding(.bottom, 10)
+            .background(Color.white)
+            .padding(.bottom, 20)
             
-            // Stamp Categories and Grid
-            VStack(spacing: 0) {
-                // Category Tabs
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 0) {
-                        ForEach(stampCategories, id: \.self) { category in
-                            Button(action: {
-                                selectedStampCategory = category
-                            }) {
-                                VStack(spacing: 4) {
-                                    Text(category.displayName)
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(selectedStampCategory == category ? .blue : .secondary)
-                                    
-                                    Rectangle()
-                                        .fill(selectedStampCategory == category ? Color.blue : Color.clear)
-                                        .frame(height: 2)
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 12)
-                            }
+            // Category Tabs
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(stampCategories, id: \.self) { category in
+                        Button(action: {
+                            selectedStampCategory = category
+                        }) {
+                            Text(category.displayName)
+                                .font(.custom("Kalam-Regular", size: 14))
+                                .foregroundColor(selectedStampCategory == category ? .black : .black.opacity(0.5))
+                                .padding(.horizontal, 8)
                         }
                     }
-                    .padding(.horizontal, 4)
                 }
-                .background(Color(.systemBackground))
-                
-                Divider()
-                
-                // Stamps Grid
-                ScrollView {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
-                        ForEach(getStampsForCategory(selectedStampCategory)) { stamp in
-                            StampItemView(
-                                stamp: stamp,
-                                isSelected: selectedStamp?.id == stamp.id
-                            ) {
-                                selectedStamp = stamp
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 100) // Space for bottom button
-                }
+                .padding(.horizontal, 21)
+                .padding(.vertical, 12)
             }
+            .background(Color.white)
+            
+            // Stamps Grid
+            ScrollView {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 5), spacing: 16) {
+                    ForEach(getStampsForCategory(selectedStampCategory)) { stamp in
+                        StampItemView(
+                            stamp: stamp,
+                            isSelected: selectedStamp?.id == stamp.id
+                        ) {
+                            selectedStamp = stamp
+                        }
+                    }
+                }
+                .padding(.horizontal, 21)
+                .padding(.top, 16)
+                .padding(.bottom, 120)
+            }
+            .background(Color.white)
             
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .navigationTitle("Add Stamp")
+        .background(Color.white)
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         .toolbar(.hidden, for: .tabBar)
         .overlay(
             // Preview Button (Bottom Right)
@@ -93,18 +110,18 @@ struct StampSelectionView: View {
                         selectedFont: selectedFont,
                         selectedStamp: selectedStamp,
                         currentLocation: currentLocation,
-                        timestamp: timestamp
+                        timestamp: timestamp,
+                        selectedImage: selectedImage
                     )) {
-                        HStack {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 21)
+                                .fill(Color.yellow)
+                                .frame(width: 138, height: 42)
+                            
                             Text("Preview")
-                            Image(systemName: "eye")
+                                .font(.custom("Kalam-Regular", size: 20))
+                                .foregroundColor(.black)
                         }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(Color.purple)
-                        .cornerRadius(25)
-                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
                     }
                     .disabled(selectedStamp == nil)
                     .opacity(selectedStamp == nil ? 0.6 : 1.0)
@@ -116,24 +133,45 @@ struct StampSelectionView: View {
     }
     
     private func getStampsForCategory(_ category: StampCategory) -> [StampModel] {
-        // Sample stamp data - replace with your actual data
         let sampleStamps = [
-            StampModel(id: "1", name: "Golden Gate", emoji: "🌉", category: .travel),
-            StampModel(id: "2", name: "Mountain Peak", emoji: "🏔️", category: .nature),
-            StampModel(id: "3", name: "Christmas Tree", emoji: "🎄", category: .holidays),
-            StampModel(id: "4", name: "Pizza Slice", emoji: "🍕", category: .food),
-            StampModel(id: "5", name: "Cute Cat", emoji: "🐱", category: .animals),
-            StampModel(id: "6", name: "Party Hat", emoji: "🎉", category: .fun),
-            StampModel(id: "7", name: "Beach Sunset", emoji: "🌅", category: .travel),
-            StampModel(id: "8", name: "Forest", emoji: "🌲", category: .nature),
-            StampModel(id: "9", name: "Gift Box", emoji: "🎁", category: .holidays),
-            StampModel(id: "10", name: "Burger", emoji: "🍔", category: .food),
-            StampModel(id: "11", name: "Dog", emoji: "🐕", category: .animals),
-            StampModel(id: "12", name: "Rainbow", emoji: "🌈", category: .fun),
+            // Featured stamps (10 total as shown in Figma design)
+            StampModel(id: "1", name: "Smiley", imageName: "stamp_smiley", category: .featured),
+            StampModel(id: "2", name: "Heart", imageName: "stamp_heart", category: .featured),
+            StampModel(id: "3", name: "Duck", imageName: "stamp_duck", category: .featured),
+            StampModel(id: "4", name: "Lightning", imageName: "stamp_lightning", category: .featured),
+            StampModel(id: "5", name: "Sun", imageName: "stamp_sun", category: .featured),
+            StampModel(id: "6", name: "Watermelon", imageName: "stamp_watermelon", category: .featured),
+            StampModel(id: "7", name: "Flower", imageName: "stamp_flower", category: .featured),
+            StampModel(id: "8", name: "Chill", imageName: "stamp_chill", category: .featured),
+            StampModel(id: "9", name: "Love", imageName: "stamp_love", category: .featured),
+            StampModel(id: "10", name: "Rainbow", imageName: "stamp_rainbow", category: .featured),
+            
+            // Food stamps
+            StampModel(id: "11", name: "Watermelon", imageName: "stamp_watermelon", category: .food),
+            
+            // Nature stamps
+            StampModel(id: "12", name: "Flower", imageName: "stamp_flower", category: .nature),
+            StampModel(id: "13", name: "Leaves", imageName: "stamp_leaves", category: .nature),
+            
+            // Fun stamps
+            StampModel(id: "14", name: "Chill", imageName: "stamp_chill", category: .fun),
+            StampModel(id: "15", name: "Love", imageName: "stamp_love", category: .fun),
+            StampModel(id: "16", name: "Rainbow", imageName: "stamp_rainbow", category: .fun),
+            
+            // Animal stamps
+            StampModel(id: "17", name: "Sheep", imageName: "stamp_sheep", category: .animals),
+            StampModel(id: "18", name: "Fox", imageName: "stamp_fox", category: .animals),
+            StampModel(id: "19", name: "Bear", imageName: "stamp_bear", category: .animals),
+            StampModel(id: "20", name: "Deer", imageName: "stamp_deer", category: .animals),
+            StampModel(id: "21", name: "Tiger", imageName: "stamp_tiger", category: .animals),
+            StampModel(id: "22", name: "Panda", imageName: "stamp_panda", category: .animals),
+            StampModel(id: "23", name: "Monkey", imageName: "stamp_monkey", category: .animals),
+            StampModel(id: "24", name: "Bird", imageName: "stamp_bird", category: .animals),
+            StampModel(id: "25", name: "Lion", imageName: "stamp_lion", category: .animals),
         ]
         
         if category == .featured {
-            return Array(sampleStamps.prefix(6))
+            return sampleStamps.filter { $0.category == .featured }
         }
         
         return sampleStamps.filter { $0.category == category }
@@ -147,23 +185,19 @@ struct StampItemView: View {
     
     var body: some View {
         Button(action: onTap) {
-            VStack(spacing: 8) {
-                Text(stamp.emoji)
-                    .font(.system(size: 40))
-                    .frame(width: 80, height: 80)
+            VStack(spacing: 4) {
+                Image(stamp.imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 59, height: 59)
                     .background(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 8)
                             .fill(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 8)
                             .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
                     )
-                
-                Text(stamp.name)
-                    .font(.caption)
-                    .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
             }
         }
         .buttonStyle(PlainButtonStyle())
@@ -195,7 +229,7 @@ enum StampCategory: String, CaseIterable {
 struct StampModel: Identifiable {
     let id: String
     let name: String
-    let emoji: String
+    let imageName: String
     let category: StampCategory
 }
 
@@ -207,7 +241,9 @@ struct StampSelectionView_Previews: PreviewProvider {
                 messageText: "Hello from my travels! Having an amazing time exploring new places.",
                 selectedFont: .handwritten,
                 currentLocation: "San Francisco, CA",
-                timestamp: Date()
+                timestamp: Date(),
+                selectedImage: UIImage(named: "sample_image1"),
+                selectedStamp: .constant(nil)
             )
         }
     }

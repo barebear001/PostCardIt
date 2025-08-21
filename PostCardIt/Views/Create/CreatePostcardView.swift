@@ -78,7 +78,7 @@ struct CreatePostcardView: View {
                     VStack(spacing: 0) {
                         HStack {
                             Text("Recents >")
-                                .font(.custom("Kalam", size: 16))
+                                .font(.custom("Kalam-Regular", size: 16))
                                 .foregroundColor(.black)
                             Spacer()
                         }
@@ -160,10 +160,10 @@ struct CreatePostcardView: View {
                     VStack {
                         HStack {
                             Spacer()
-                            NavigationLink(destination: PostcardWritingView()) {
+                            NavigationLink(destination: PostcardWritingView(selectedImage: selectedImage)) {
                                 HStack {
                                     Text("Next")
-                                        .font(.custom("Kalam", size: 20))
+                                        .font(.custom("Kalam-Regular", size: 20))
                                         .foregroundColor(.black)
                                     Image(systemName: "arrow.right")
                                         .font(.system(size: 16, weight: .medium))
