@@ -1,127 +1,72 @@
 import SwiftUI
 
 struct SendCompleteView: View {
-    @Environment(\.presentationMode) var presentationMode
-    @State private var showConfetti = false
+    @Environment(\.dismiss) private var dismiss
+    @State private var showAnimation = false
     
     var body: some View {
         ZStack {
             // Background
-            Color(.systemBackground)
+            Color.white
                 .ignoresSafeArea()
             
-            VStack(spacing: 32) {
+            VStack {
                 Spacer()
                 
-                // Success icon with animation
-                ZStack {
-                    Circle()
-                        .fill(Color.green.opacity(0.1))
-                        .frame(width: 120, height: 120)
-                        .scaleEffect(showConfetti ? 1.0 : 0.8)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.6), value: showConfetti)
-                    
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 60))
-                        .foregroundColor(.green)
-                        .scaleEffect(showConfetti ? 1.0 : 0.5)
-                        .animation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.2), value: showConfetti)
-                }
-                
-                VStack(spacing: 16) {
-                    Text("Postcard Sent!")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                        .opacity(showConfetti ? 1.0 : 0.0)
-                        .animation(.easeInOut(duration: 0.8).delay(0.4), value: showConfetti)
-                    
-                    Text("Your postcard has been sent successfully.\nYour friend will receive it soon!")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(nil)
-                        .opacity(showConfetti ? 1.0 : 0.0)
-                        .animation(.easeInOut(duration: 0.8).delay(0.6), value: showConfetti)
-                }
+                // Paper airplane icon with animation
+                Image("paper_airplane")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 111, height: 92)
+                    .scaleEffect(showAnimation ? 1.0 : 0.5)
+                    .opacity(showAnimation ? 1.0 : 0.0)
+                    .animation(.spring(response: 0.8, dampingFraction: 0.6), value: showAnimation)
                 
                 Spacer()
+                    .frame(height: 30)
                 
-                // Action button
-                NavigationLink(destination: MainTabView().navigationBarBackButtonHidden(true)) {
-                    Text("Done")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color.blue)
-                        .cornerRadius(12)
-                }
-                .padding(.horizontal, 32)
-                .opacity(showConfetti ? 1.0 : 0.0)
-                .animation(.easeInOut(duration: 0.8).delay(0.8), value: showConfetti)
+                // "Card sent!" text with handwritten style
+                Text("Card sent!")
+                    .font(.custom("Kalam-Regular", size: 20))
+                    .foregroundColor(.black)
+                    .opacity(showAnimation ? 1.0 : 0.0)
+                    .animation(.easeInOut(duration: 0.8).delay(0.3), value: showAnimation)
                 
                 Spacer()
-            }
-            
-            // Confetti effect
-            if showConfetti {
-                ConfettiView()
             }
         }
         .toolbar(.hidden, for: .tabBar)
+        .navigationBarBackButtonHidden(true)
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                showConfetti = true
+                showAnimation = true
             }
             
             // Add haptic feedback
             let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
             impactFeedback.impactOccurred()
+            
+            // Auto-navigate back after 3 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                // Find the root presentation controller and dismiss
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let window = windowScene.windows.first,
+                   let rootViewController = window.rootViewController {
+                    
+                    // Find the top most presented view controller
+                    var topController = rootViewController
+                    while let presented = topController.presentedViewController {
+                        topController = presented
+                    }
+                    
+                    // Dismiss the sheet
+                    topController.dismiss(animated: true)
+                }
+            }
         }
     }
 }
 
-struct ConfettiView: View {
-    @State private var animate = false
-    
-    var body: some View {
-        ZStack {
-            ForEach(0..<50, id: \.self) { index in
-                ConfettiPiece()
-                    .offset(
-                        x: animate ? CGFloat.random(in: -200...200) : 0,
-                        y: animate ? CGFloat.random(in: -400...400) : -50
-                    )
-                    .rotationEffect(.degrees(animate ? Double.random(in: 0...360) : 0))
-                    .scaleEffect(animate ? CGFloat.random(in: 0.5...1.5) : 1)
-                    .animation(
-                        .easeInOut(duration: Double.random(in: 2...4))
-                        .delay(Double.random(in: 0...1)),
-                        value: animate
-                    )
-            }
-        }
-        .onAppear {
-            animate = true
-        }
-    }
-}
-
-struct ConfettiPiece: View {
-    let colors: [Color] = [.red, .blue, .green, .yellow, .orange, .purple, .pink]
-    @State private var color = Color.red
-    
-    var body: some View {
-        Rectangle()
-            .fill(color)
-            .frame(width: 8, height: 8)
-            .cornerRadius(2)
-            .onAppear {
-                color = colors.randomElement() ?? .red
-            }
-    }
-}
 
 #Preview {
     SendCompleteView()

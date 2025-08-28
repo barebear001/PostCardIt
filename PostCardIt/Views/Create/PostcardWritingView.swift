@@ -46,7 +46,7 @@ struct PostcardWritingView: View {
                     selectedStamp: selectedStamp
                 )
                 .padding(.horizontal, 25)
-                .padding(.top, 20)
+                .padding(.top, 12)
                 
                 // Text input area
                 ZStack(alignment: .topLeading) {
@@ -56,7 +56,7 @@ struct PostcardWritingView: View {
                         .background(Color.clear)
                         .frame(height: 234)
                         .padding(.horizontal, 25)
-                        .padding(.top, 34)
+                        .padding(.top, 24)
                     
                     // Placeholder text
                     if messageText.isEmpty {
@@ -64,7 +64,7 @@ struct PostcardWritingView: View {
                             .font(.custom("Kalam-Regular", size: 14))
                             .foregroundColor(Color(red: 0.85, green: 0.85, blue: 0.85))
                             .padding(.leading, 25)
-                            .padding(.top, 42)
+                            .padding(.top, 32)
                             .allowsHitTesting(false)
                     }
                 }
@@ -113,7 +113,7 @@ struct PostcardWritingView: View {
                         }
                     }
                     .padding(.horizontal)
-                    .padding(.top, 13)
+                    .padding(.top, 8)
                 }
                 .frame(height: 91)
                 .background(Color.white)
@@ -165,7 +165,7 @@ struct PostcardBackView: View {
                         Spacer()
                     }
                     .padding(.leading, 14)
-                    .padding(.top, 17)
+                    .padding(.top, 12)
                     
                     // Text overlay aligned with lines
                     if !messageText.isEmpty {
@@ -179,7 +179,7 @@ struct PostcardBackView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .topLeading)
                         .padding(.leading, 14)
-                        .padding(.top, 17)
+                        .padding(.top, 12)
                     }
                 }
                 .frame(width: 200, height: 228)
@@ -213,7 +213,7 @@ struct PostcardBackView: View {
                         }
                         Spacer()
                     }
-                    .padding(.top, 17)
+                    .padding(.top, 12)
                     
                     Spacer()
                     

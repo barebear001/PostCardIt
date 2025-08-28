@@ -46,8 +46,10 @@ struct CreatePostcardPreviewView: View {
                             location: currentLocation,
                             selectedStamp: selectedStamp
                         )
+                        .scaleEffect(0.95)
                         .rotationEffect(.degrees(-15))
-                        .padding(.top, 50)
+                        .padding(.top, 30)
+                        .padding(.bottom, -30)
                         .zIndex(1) // Make sure back is above front
                         Spacer()
                     }
@@ -61,6 +63,7 @@ struct CreatePostcardPreviewView: View {
                             .padding(.bottom, 50)
                         Spacer()
                     }
+                    .scaleEffect(0.95)
                     .padding(.leading, 0)
                     .padding(.trailing, 80)
                     .zIndex(2) // Make sure front is below back
@@ -81,8 +84,8 @@ struct CreatePostcardPreviewView: View {
                         }
                     }
                     .padding(.trailing, 50)
-                    .padding(.top, -10)
-                    .padding(.bottom, 120) // Extra bottom padding to avoid tab bar
+                    .padding(.top, -25)
+                    .padding(.bottom, 100) // Extra bottom padding to avoid tab bar
             }
             .padding(.vertical, 20)
             }

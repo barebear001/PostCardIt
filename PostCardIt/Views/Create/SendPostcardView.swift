@@ -8,22 +8,25 @@ struct Friend: Identifiable, Codable {
     let isOnline: Bool
     
     static let sampleFriends = [
-        Friend(name: "Alice Johnson", email: "alice@example.com", profileImageName: nil, isOnline: true),
-        Friend(name: "Bob Smith", email: "bob@example.com", profileImageName: nil, isOnline: false),
-        Friend(name: "Carol Davis", email: "carol@example.com", profileImageName: nil, isOnline: true),
-        Friend(name: "David Wilson", email: "david@example.com", profileImageName: nil, isOnline: false),
-        Friend(name: "Emma Brown", email: "emma@example.com", profileImageName: nil, isOnline: true),
-        Friend(name: "Frank Miller", email: "frank@example.com", profileImageName: nil, isOnline: false)
+        Friend(name: "Name Name", email: "email@example.com", profileImageName: "friend1", isOnline: true),
+        Friend(name: "Name Name", email: "email@example.com", profileImageName: "friend2", isOnline: false),
+        Friend(name: "Name Name", email: "email@example.com", profileImageName: "friend3", isOnline: true),
+        Friend(name: "Name Name", email: "email@example.com", profileImageName: "friend4", isOnline: false),
+        Friend(name: "Name Name", email: "email@example.com", profileImageName: "friend5", isOnline: true),
+        Friend(name: "Name Name", email: "email@example.com", profileImageName: "friend6", isOnline: false),
+        Friend(name: "Name Name", email: "email@example.com", profileImageName: "friend7", isOnline: true),
+        Friend(name: "Name Name", email: "email@example.com", profileImageName: "friend8", isOnline: false),
+        Friend(name: "Name Name", email: "email@example.com", profileImageName: "friend9", isOnline: true)
     ]
 }
 
 struct SendPostcardView: View {
-    @Environment(\.presentationMode) var presentationMode
     @State private var searchText = ""
     @State private var selectedFriend: Friend?
-    @State private var sendViaEmail = false
     @State private var emailAddress = ""
-    
+    @State private var phoneNumber = ""
+    @Environment(\.dismiss) private var dismiss
+
     let friends = Friend.sampleFriends
     
     var filteredFriends: [Friend] {
@@ -38,134 +41,185 @@ struct SendPostcardView: View {
     }
     
     var body: some View {
-        NavigationView {
             VStack(spacing: 0) {
-                // Header with back button
+                // Header with back button and decorative elements
                 HStack {
                     Button(action: {
-                        presentationMode.wrappedValue.dismiss()
+                        dismiss()
                     }) {
                         Image(systemName: "chevron.left")
-                            .font(.title2)
-                            .foregroundColor(.primary)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.black)
+                            .frame(width: 42, height: 41)
                     }
                     
                     Spacer()
                     
-                    Text("Send Postcard")
-                        .font(.headline)
-                        .fontWeight(.medium)
-                    
-                    Spacer()
-                    
-                    // Placeholder for symmetry
-                    Image(systemName: "chevron.left")
-                        .font(.title2)
-                        .foregroundColor(.clear)
+                    // Decorative postcard elements
+                    Image("create_top_right_4")
+                        .resizable()
+                        .frame(width: 100, height: 57)
                 }
                 .padding(.horizontal)
-                .padding(.vertical, 10)
-                
-                Divider()
+                .frame(height: 102)
+                .background(Color.white)
                 
                 // Search bar
                 HStack {
                     Image(systemName: "magnifyingglass")
+                        .font(.system(size: 14))
                         .foregroundColor(.gray)
                     
-                    TextField("Search friends...", text: $searchText)
-                        .textFieldStyle(PlainTextFieldStyle())
+                    TextField("Search contact", text: $searchText)
+                        .font(.custom("Kalam", size: 11))
+                        .foregroundColor(Color(red: 0.6, green: 0.6, blue: 0.6))
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Color(.systemGray6))
-                .cornerRadius(10)
-                .padding(.horizontal)
-                .padding(.top, 16)
+                .padding(.vertical, 8)
+                .background(Color.white)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.black, lineWidth: 1)
+                )
+                .padding(.horizontal, 19)
+                .padding(.top, 4)
                 
-                // Friends list
+                // Friends grid
                 ScrollView {
-                    LazyVStack(spacing: 12) {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 20) {
                         ForEach(filteredFriends) { friend in
-                            FriendRowView(
+                            FriendGridItemView(
                                 friend: friend,
                                 isSelected: selectedFriend?.id == friend.id
                             ) {
                                 selectedFriend = friend
-                                sendViaEmail = false
                                 emailAddress = ""
+                                phoneNumber = ""
                             }
                         }
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
+                    .padding(.horizontal, 54)
+                    .padding(.top, 22)
+                    .padding(.bottom, 20)
                 }
+                .frame(maxHeight: 313)
                 
-                Divider()
-                
-                // Email option section
-                VStack(spacing: 16) {
-                    HStack {
-                        Text("Or send via email")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        Spacer()
+                // Email to section
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "envelope")
+                            .font(.system(size: 17))
+                            .foregroundColor(.black)
+                        
+                        Text("Email to")
+                            .font(.custom("Kalam", size: 16))
+                            .foregroundColor(.black)
                     }
+                    .padding(.leading, 19)
                     
-                    VStack(spacing: 12) {
-                        Toggle("Send via email", isOn: $sendViaEmail)
-                            .toggleStyle(SwitchToggleStyle())
-                            .onChange(of: sendViaEmail) { value in
-                                if value {
+                    TextField("@ enter an email address here", text: $emailAddress)
+                        .font(.custom("Kalam", size: 11))
+                        .foregroundColor(Color.black.opacity(0.35))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.white)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.black, lineWidth: 1)
+                        )
+                        .padding(.horizontal, 19)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
+                        .onChange(of: emailAddress) { _ in
+                            if !emailAddress.isEmpty {
+                                selectedFriend = nil
+                                phoneNumber = ""
+                            }
+                        }
+                }
+                .padding(.top, 20)
+                
+                // Message to section
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "message")
+                            .font(.system(size: 17))
+                            .foregroundColor(.black)
+                        
+                        Text("Message to")
+                            .font(.custom("Kalam", size: 16))
+                            .foregroundColor(.black)
+                    }
+                    .padding(.leading, 19)
+                    
+                    HStack {
+                        Text("+1")
+                            .font(.custom("Kalam", size: 16))
+                            .foregroundColor(.black)
+                            .padding(.leading, 16)
+                        
+                        Rectangle()
+                            .fill(Color.black)
+                            .frame(width: 1, height: 22)
+                            .padding(.leading, 8)
+                        
+                        TextField("enter a phone number here", text: $phoneNumber)
+                            .font(.custom("Kalam", size: 11))
+                            .foregroundColor(Color.black.opacity(0.35))
+                            .padding(.leading, 8)
+                            .keyboardType(.phonePad)
+                            .onChange(of: phoneNumber) { _ in
+                                if !phoneNumber.isEmpty {
                                     selectedFriend = nil
+                                    emailAddress = ""
                                 }
                             }
-                        
-                        if sendViaEmail {
-                            TextField("Enter email address", text: $emailAddress)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .keyboardType(.emailAddress)
-                                .autocapitalization(.none)
-                        }
                     }
+                    .padding(.vertical, 8)
+                    .background(Color.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.black, lineWidth: 1)
+                    )
+                    .padding(.horizontal, 19)
                 }
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
-                .padding(.horizontal)
-                .padding(.vertical, 16)
+                .padding(.top, 20)
                 
                 Spacer()
-                
-                // Send button
-                HStack {
-                    Spacer()
-                    
-                    NavigationLink(destination: SendCompleteView()) {
-                        Text("Send")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 32)
-                            .padding(.vertical, 12)
-                            .background(canSend ? Color.blue : Color.gray)
-                            .cornerRadius(25)
-                    }
-                    .disabled(!canSend)
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 32)
             }
+            .background(Color.white)
             .navigationBarHidden(true)
             .toolbar(.hidden, for: .tabBar)
-        }
+            .overlay(
+                // Done Button (Bottom Right)
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        NavigationLink(destination: SendCompleteView()) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 21)
+                                    .fill(Color.yellow)
+                                    .frame(width: 138, height: 42)
+                                
+                                Text("Done")
+                                    .font(.custom("Kalam-Regular", size: 20))
+                                    .foregroundColor(.black)
+                            }
+                        }
+                        .disabled(!canSend)
+                        .opacity(canSend ? 1.0 : 0.6)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 30)
+                }
+            )
     }
     
     private var canSend: Bool {
-        if sendViaEmail {
-            return !emailAddress.isEmpty && isValidEmail(emailAddress)
-        } else {
-            return selectedFriend != nil
-        }
+        return selectedFriend != nil || 
+               (!emailAddress.isEmpty && isValidEmail(emailAddress)) ||
+               !phoneNumber.isEmpty
     }
     
     private func isValidEmail(_ email: String) -> Bool {
@@ -173,77 +227,54 @@ struct SendPostcardView: View {
         let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
         return emailPred.evaluate(with: email)
     }
-    
 }
 
-struct FriendRowView: View {
+struct FriendGridItemView: View {
     let friend: Friend
     let isSelected: Bool
     let onTap: () -> Void
     
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 12) {
-                // Profile image placeholder
+            VStack(spacing: 8) {
+                // Profile image
                 ZStack {
-                    Circle()
-                        .fill(Color(.systemGray4))
-                        .frame(width: 50, height: 50)
-                    
                     if let imageName = friend.profileImageName {
-                        Image(imageName)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 50, height: 50)
-                            .clipShape(Circle())
-                    } else {
-                        Text(String(friend.name.prefix(1)))
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                    }
-                    
-                    // Online status indicator
-                    if friend.isOnline {
+                        // For now, use a placeholder with initials since we don't have the actual images
                         Circle()
-                            .fill(Color.green)
-                            .frame(width: 14, height: 14)
+                            .fill(Color.blue.opacity(0.7))
+                            .frame(width: 61, height: 61)
                             .overlay(
-                                Circle()
-                                    .stroke(Color.white, lineWidth: 2)
+                                Text(String(friend.name.prefix(2)))
+                                    .font(.custom("Kalam", size: 16))
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
                             )
-                            .offset(x: 18, y: -18)
+                    } else {
+                        Circle()
+                            .fill(Color(.systemGray4))
+                            .frame(width: 61, height: 61)
+                            .overlay(
+                                Text(String(friend.name.prefix(2)))
+                                    .font(.custom("Kalam", size: 16))
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                            )
                     }
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(friend.name)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .multilineTextAlignment(.leading)
-                    
-                    Text(friend.email)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.leading)
-                }
-                
-                Spacer()
-                
-                // Selection indicator
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
-                        .font(.title2)
-                }
+                // Friend name
+                Text(friend.name)
+                    .font(.custom("Kalam", size: 11))
+                    .foregroundColor(.black)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
             }
-            .contentShape(Rectangle())
+            .padding(.vertical, 4)
+            .background(isSelected ? Color.blue.opacity(0.2) : Color.clear)
+            .cornerRadius(8)
         }
         .buttonStyle(PlainButtonStyle())
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
-        .background(isSelected ? Color.blue.opacity(0.1) : Color.clear)
-        .cornerRadius(12)
     }
 }
 

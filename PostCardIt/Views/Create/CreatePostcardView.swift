@@ -70,7 +70,7 @@ struct CreatePostcardView: View {
                     }
                     .frame(width: 344, height: 263)
                     .padding(.horizontal, 25)
-                    .padding(.top, 20)
+                    .padding(.top, 12)
                     
                     Spacer(minLength: 20)
                     
@@ -149,7 +149,7 @@ struct CreatePostcardView: View {
                                 }
                             }
                             .padding(.horizontal, 12)
-                            .padding(.top, 8)
+                            .padding(.top, 4)
                         }
                         //                    .padding(.bottom)
                         .frame(height: 300)
@@ -176,13 +176,13 @@ struct CreatePostcardView: View {
                             }
                         }
                         .padding(.horizontal)
-                        .padding(.top, 5)
+                        .padding(.top, 2)
                         
                         // Home indicator
                         RoundedRectangle(cornerRadius: 2.5)
                             .fill(Color.black)
                             .frame(width: 138.5, height: 5)
-                            .padding(.top, 10)
+                            .padding(.top, 6)
                     }
                     .frame(height: 91)
                     .background(Color.white)

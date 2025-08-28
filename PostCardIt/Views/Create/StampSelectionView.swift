@@ -49,10 +49,10 @@ struct StampSelectionView: View {
                 )
                 .frame(width: 344, height: 263)
                 .padding(.horizontal, 25)
-                .padding(.top, 20)
+                .padding(.top, 12)
             }
             .background(Color.white)
-            .padding(.bottom, 20)
+            .padding(.bottom, 12)
             
             // Category Tabs
             ScrollView(.horizontal, showsIndicators: false) {
@@ -86,7 +86,7 @@ struct StampSelectionView: View {
                     }
                 }
                 .padding(.horizontal, 21)
-                .padding(.top, 16)
+                .padding(.top, 12)
                 .padding(.bottom, 120)
             }
             .background(Color.white)

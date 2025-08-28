@@ -1,0 +1,16 @@
+{
+  "dev": {
+    "region": "us-east-1",
+    "account": "123456789012",
+    "enablePointInTimeRecovery": false,
+    "enableS3Versioning": false,
+    "cloudFrontPriceClass": "PriceClass_100"
+  },
+  "prod": {
+    "region": "us-east-1", 
+    "account": "123456789012",
+    "enablePointInTimeRecovery": true,
+    "enableS3Versioning": true,
+    "cloudFrontPriceClass": "PriceClass_All"
+  }
+}

@@ -4,124 +4,166 @@ import SwiftUI
 struct MyCardsView: View {
     @EnvironmentObject var authService: CognitoAuthService
     @StateObject private var postcardService = PostcardService()
-    @State private var selectedTab = 0
     @State private var showingError = false
     @State private var refreshing = false
     
-    let columns = [GridItem(.flexible()), GridItem(.flexible())]
+    // Optional injected service for preview/testing
+    var injectedPostcardService: PostcardService?
+    
+    // Computed property to get the active service
+    private var activePostcardService: PostcardService {
+        return injectedPostcardService ?? postcardService
+    }
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Header with title
             VStack {
-                // Tab selector
-                Picker("View", selection: $selectedTab) {
-                    Text("Received").tag(0)
-                    Text("Sent").tag(1)
-                }
-                .pickerStyle(SegmentedPickerStyle())
-                .padding()
-                
-                if postcardService.isLoading && !refreshing {
-                    Spacer()
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                    Spacer()
-                } else if (selectedTab == 0 && postcardService.receivedPostcards.isEmpty) ||
-                          (selectedTab == 1 && postcardService.sentPostcards.isEmpty) {
-                    Spacer()
-                    VStack(spacing: 20) {
-                        Image(systemName: selectedTab == 0 ? "envelope" : "paperplane")
-                            .font(.system(size: 60))
-                            .foregroundColor(.gray)
-                        
-                        Text(selectedTab == 0 ? "No postcards received yet" : "No postcards sent yet")
-                            .font(.headline)
-                            .foregroundColor(.gray)
-                        
-                        if selectedTab == 1 {
-                            NavigationLink(destination: CreatePostcardView(selectedTab: $selectedTab)) {
-                                Text("Create a Postcard")
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .background(Color.blue)
-                                    .cornerRadius(10)
-                            }
-                        }
-                    }
-                    Spacer()
-                } else {
-                    // Cards grid with pull to refresh
-                    RefreshableScrollView(onRefresh: { done in
-                        refreshing = true
-                        loadPostcards()
-                        // Simulate network delay for better UX feedback
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            refreshing = false
-                            done()
-                        }
-                    }) {
-                        LazyVGrid(columns: columns, spacing: 16) {
-                            if selectedTab == 0 {
-                                ForEach(postcardService.receivedPostcards) { postcard in
-                                    NavigationLink(
-                                        destination: CardDetailView(
-                                            postcard: postcard,
-                                            isReceived: true,
-                                            postcardService: postcardService
-                                        )
-                                    ) {
-                                        CardPreviewView(postcard: postcard, isReceived: true)
-                                    }
-                                }
-                            } else {
-                                ForEach(postcardService.sentPostcards) { postcard in
-                                    NavigationLink(
-                                        destination: CardDetailView(
-                                            postcard: postcard,
-                                            isReceived: false,
-                                            postcardService: postcardService
-                                        )
-                                    ) {
-                                        CardPreviewView(postcard: postcard, isReceived: false)
-                                    }
-                                }
-                            }
-                        }
-                        .padding()
+                Text("My Collection")
+                    .font(.custom("Kalam-Regular", size: 16))
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 20)
+            }
+            .frame(height: 102)
+            .background(Color.white)
+            
+            // Main content
+            if activePostcardService.isLoading && !refreshing {
+                Spacer()
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                Spacer()
+            } else if activePostcardService.receivedPostcards.isEmpty && activePostcardService.sentPostcards.isEmpty {
+                Spacer()
+                VStack(spacing: 20) {
+                    Image(systemName: "photo.stack")
+                        .font(.system(size: 60))
+                        .foregroundColor(.gray)
+                    
+                    Text("No postcards yet")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                    
+                    NavigationLink(destination: CreatePostcardView(selectedTab: .constant(2))) {
+                        Text("Create a Postcard")
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.blue)
+                            .cornerRadius(10)
                     }
                 }
-            }
-            .navigationTitle(selectedTab == 0 ? "Received Cards" : "Sent Cards")
-            .alert(isPresented: $showingError) {
-                Alert(
-                    title: Text("Error"),
-                    message: Text(postcardService.errorMessage),
-                    dismissButton: .default(Text("OK"))
-                )
-            }
-            .onAppear {
-                loadPostcards()
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    if selectedTab == 1 {
-                        NavigationLink(destination: CreatePostcardView(selectedTab: $selectedTab)) {
-                            Image(systemName: "plus")
+                Spacer()
+            } else {
+                // Masonry grid with all postcards
+                ScrollView {
+                    MasonryGrid(items: allPostcards, columns: 2, spacing: 16) { postcard in
+                        NavigationLink(
+                            destination: CardDetailView(
+                                postcard: postcard,
+                                isReceived: activePostcardService.receivedPostcards.contains(where: { $0.id == postcard.id }),
+                                postcardService: activePostcardService
+                            )
+                        ) {
+                            PostcardFrontImageView(postcard: postcard)
                         }
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 0)
+                    .padding(.bottom, 120)
+                }
+                .refreshable {
+                    loadPostcards()
                 }
             }
         }
+        .background(Color.white)
+        .alert(isPresented: $showingError) {
+            Alert(
+                title: Text("Error"),
+                message: Text(activePostcardService.errorMessage),
+                dismissButton: .default(Text("OK"))
+            )
+        }
+        .onAppear {
+            loadPostcards()
+        }
+    }
+    
+    // Combine received and sent postcards
+    private var allPostcards: [Postcard] {
+        var combined = activePostcardService.receivedPostcards
+        combined.append(contentsOf: activePostcardService.sentPostcards)
+        return combined.sorted { $0.createdAt > $1.createdAt }
     }
     
     private func loadPostcards() {
+        // Only load if using the real service, not injected one
+        guard injectedPostcardService == nil else { return }
+        
         guard let userId = authService.user?.username else {
-            postcardService.errorMessage = "User not logged in"
+            activePostcardService.errorMessage = "User not logged in"
             showingError = true
             return
         }
         
-        postcardService.fetchUserPostcards(userId: userId)
+        activePostcardService.fetchUserPostcards(userId: userId)
+    }
+}
+
+// Postcard front image view that displays only the scenic image
+struct PostcardFrontImageView: View {
+    let postcard: Postcard
+    @State private var imageURL: URL?
+    
+    var body: some View {
+        if let imageKey = postcard.imageKey {
+            // For preview with local assets
+            if imageKey.starts(with: "preview_postcard") {
+                Image(imageKey)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .background(Color(red: 0.992, green: 0.988, blue: 0.982)) // Off-white background
+                    .clipped()
+                    .shadow(color: Color.black.opacity(0.25), radius: 3, x: 1, y: 2) // Figma shadow
+            } else {
+                // For production with remote URLs
+                AsyncImage(url: imageURL) { phase in
+                    switch phase {
+                    case .empty:
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .aspectRatio(1.4, contentMode: .fit)
+                            .overlay(
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            )
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .background(Color(red: 0.992, green: 0.988, blue: 0.982))
+                            .clipped()
+                            .shadow(color: Color.black.opacity(0.25), radius: 3, x: 1, y: 2)
+                    case .failure:
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .aspectRatio(1.4, contentMode: .fit)
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .foregroundColor(.gray)
+                                    .font(.title)
+                            )
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+                .onAppear {
+                    let service = PostcardService()
+                    self.imageURL = service.getImageURL(imageKey: imageKey)
+                }
+            }
+        }
     }
 }
 
@@ -403,7 +445,25 @@ struct RefreshableScrollView<Content: View>: View {
 
 #Preview {
     let mockAuthService = CognitoAuthService()
-
-    MyCardsView()
+    
+    // Create sample postcards using the downloaded images
+    let samplePostcards = [
+        Postcard(id: "1", senderId: "user1", senderName: "Alice", recipientName: "You", message: "Having a great time!", country: "Hawaii", imageKey: "preview_postcard_1", createdAt: Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()),
+        Postcard(id: "2", senderId: "user2", senderName: "Bob", recipientName: "You", message: "Beautiful sunset here!", country: "California", imageKey: "preview_postcard_2", createdAt: Calendar.current.date(byAdding: .day, value: -3, to: Date()) ?? Date()),
+        Postcard(id: "3", senderId: "user3", senderName: "Charlie", recipientName: "You", message: "City life is amazing!", country: "New York", imageKey: "preview_postcard_3", createdAt: Calendar.current.date(byAdding: .day, value: -5, to: Date()) ?? Date()),
+        Postcard(id: "4", senderId: "current_user", senderName: "You", recipientName: "Diana", message: "Missing you!", country: "Japan", imageKey: "preview_postcard_4", createdAt: Calendar.current.date(byAdding: .day, value: -2, to: Date()) ?? Date(), isSent: true),
+        Postcard(id: "5", senderId: "current_user", senderName: "You", recipientName: "Emma", message: "Wish you were here!", country: "France", imageKey: "preview_postcard_5", createdAt: Calendar.current.date(byAdding: .day, value: -4, to: Date()) ?? Date(), isSent: true),
+        Postcard(id: "6", senderId: "user6", senderName: "Frank", recipientName: "You", message: "Greetings from paradise!", country: "Maldives", imageKey: "preview_postcard_6", createdAt: Calendar.current.date(byAdding: .day, value: -6, to: Date()) ?? Date()),
+        Postcard(id: "7", senderId: "current_user", senderName: "You", recipientName: "Grace", message: "Amazing architecture here!", country: "Italy", imageKey: "preview_postcard_7", createdAt: Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date(), isSent: true),
+        Postcard(id: "8", senderId: "user8", senderName: "Helen", recipientName: "You", message: "Palm trees and beaches!", country: "Miami", imageKey: "preview_postcard_8", createdAt: Calendar.current.date(byAdding: .day, value: -8, to: Date()) ?? Date())
+    ]
+    
+    // Create mock PostcardService with sample data
+    let mockPostcardService = PostcardService()
+    mockPostcardService.receivedPostcards = samplePostcards.filter { !$0.isSent }
+    mockPostcardService.sentPostcards = samplePostcards.filter { $0.isSent }
+    
+    // Use the actual MyCardsView with injected mock service
+    return MyCardsView(injectedPostcardService: mockPostcardService)
         .environmentObject(mockAuthService)
 }

@@ -83,10 +83,33 @@ struct CustomTabBar: View {
                                     .rotationEffect(.degrees(11.58))
                                     .position(x: 35, y: 5)
                             } else {
-                                Image(item.icon)
-                                    .resizable()
-//                                    .scaledToFit()
-                                    .frame(width: index == 3 ? 27 : 26, height: index == 3 ? 21 : 21)
+                                // Use selected state images when tabs are selected
+                                if index == 0 && selectedTab != 0 {
+                                    // Home tab unselected
+                                    Image("home_unselected")
+                                        .resizable()
+                                        .frame(width: 26, height: 21)
+                                } else if index == 1 && selectedTab == 1 {
+                                    // Map tab selected
+                                    Image("map_selected")
+                                        .resizable()
+                                        .frame(width: 26, height: 21)
+                                } else if index == 3 && selectedTab == 3 {
+                                    // My Cards selected
+                                    Image("my_cards_selected")
+                                        .resizable()
+                                        .frame(width: 27, height: 21)
+                                } else if index == 4 && selectedTab == 4 {
+                                    // Me tab selected
+                                    Image("me_selected")
+                                        .resizable()
+                                        .frame(width: 26, height: 21)
+                                } else {
+                                    Image(item.icon)
+                                        .resizable()
+//                                        .scaledToFit()
+                                        .frame(width: index == 3 ? 27 : 26, height: index == 3 ? 21 : 21)
+                                }
                             }
                         }
                         .frame(height: index == 2 ? 50 : 36)
