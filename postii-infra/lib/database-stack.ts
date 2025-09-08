@@ -2,17 +2,17 @@ import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
 
-export interface DatabaseStackProps {
+export interface DatabaseStackProps extends cdk.StackProps {
   stage: string;
 }
 
-export class DatabaseStack extends Construct {
+export class DatabaseStack extends cdk.Stack {
   public readonly usersTable: dynamodb.Table;
   public readonly friendshipsTable: dynamodb.Table;
   public readonly postcardsTable: dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: DatabaseStackProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     const { stage } = props;
 
@@ -22,7 +22,9 @@ export class DatabaseStack extends Construct {
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      pointInTimeRecovery: stage === 'prod',
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: stage === 'prod',
+      },
       removalPolicy: stage === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
     });
 
@@ -43,7 +45,9 @@ export class DatabaseStack extends Construct {
       partitionKey: { name: 'friendshipId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      pointInTimeRecovery: stage === 'prod',
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: stage === 'prod',
+      },
       removalPolicy: stage === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
     });
 
@@ -66,7 +70,9 @@ export class DatabaseStack extends Construct {
       partitionKey: { name: 'postcardId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      pointInTimeRecovery: stage === 'prod',
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: stage === 'prod',
+      },
       removalPolicy: stage === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
     });
 

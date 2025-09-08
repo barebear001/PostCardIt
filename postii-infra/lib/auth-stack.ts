@@ -2,16 +2,16 @@ import * as cdk from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { Construct } from 'constructs';
 
-export interface AuthStackProps {
+export interface AuthStackProps extends cdk.StackProps {
   stage: string;
 }
 
-export class AuthStack extends Construct {
+export class AuthStack extends cdk.Stack {
   public readonly userPool: cognito.UserPool;
   public readonly userPoolClient: cognito.UserPoolClient;
 
   constructor(scope: Construct, id: string, props: AuthStackProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     const { stage } = props;
 
@@ -51,6 +51,19 @@ export class AuthStack extends Construct {
         },
         scopes: [cognito.OAuthScope.OPENID, cognito.OAuthScope.EMAIL, cognito.OAuthScope.PROFILE],
       },
+    });
+
+    // Outputs
+    new cdk.CfnOutput(this, 'UserPoolId', {
+      value: this.userPool.userPoolId,
+      description: 'Cognito User Pool ID',
+      exportName: `${stage}-PostiiUserPoolId`,
+    });
+
+    new cdk.CfnOutput(this, 'UserPoolClientId', {
+      value: this.userPoolClient.userPoolClientId,
+      description: 'Cognito User Pool Client ID',
+      exportName: `${stage}-PostiiUserPoolClientId`,
     });
   }
 }

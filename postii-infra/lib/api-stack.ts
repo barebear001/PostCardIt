@@ -7,7 +7,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
-export interface ApiStackProps {
+export interface ApiStackProps extends cdk.StackProps {
   stage: string;
   userPool: cognito.UserPool;
   usersTable: dynamodb.Table;
@@ -16,11 +16,11 @@ export interface ApiStackProps {
   assetsBucket: s3.Bucket;
 }
 
-export class ApiStack extends Construct {
+export class ApiStack extends cdk.Stack {
   public readonly api: apigateway.RestApi;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     const { stage, userPool, usersTable, friendshipsTable, postcardsTable, assetsBucket } = props;
 
@@ -66,32 +66,32 @@ export class ApiStack extends Construct {
 
     // Create Lambda functions
     const authHandler = new lambda.Function(this, 'AuthHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: 'lambda_function.lambda_handler',
       code: lambda.Code.fromAsset('lambda/auth'),
       role: lambdaRole,
       environment: commonEnvironment,
     });
 
     const usersHandler = new lambda.Function(this, 'UsersHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: 'lambda_function.lambda_handler',
       code: lambda.Code.fromAsset('lambda/users'),
       role: lambdaRole,
       environment: commonEnvironment,
     });
 
     const friendsHandler = new lambda.Function(this, 'FriendsHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: 'lambda_function.lambda_handler',
       code: lambda.Code.fromAsset('lambda/friends'),
       role: lambdaRole,
       environment: commonEnvironment,
     });
 
     const postcardsHandler = new lambda.Function(this, 'PostcardsHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: 'lambda_function.lambda_handler',
       code: lambda.Code.fromAsset('lambda/postcards'),
       role: lambdaRole,
       environment: commonEnvironment,
@@ -107,7 +107,19 @@ export class ApiStack extends Construct {
 
     // Protected routes (require authorization)
     const users = v1.addResource('users');
-    users.addMethod('ANY', new apigateway.LambdaIntegration(usersHandler), { authorizer });
+    users.addMethod('GET', new apigateway.LambdaIntegration(usersHandler), { authorizer }); // Get current user profile
+    users.addMethod('POST', new apigateway.LambdaIntegration(usersHandler), { authorizer }); // Create user profile
+    users.addMethod('PUT', new apigateway.LambdaIntegration(usersHandler), { authorizer }); // Update user profile
+    
+    // User search endpoint
+    const usersSearch = users.addResource('search');
+    usersSearch.addMethod('GET', new apigateway.LambdaIntegration(usersHandler), { authorizer });
+    
+    // Get specific user by ID
+    const userById = users.addResource('{userId}');
+    userById.addMethod('GET', new apigateway.LambdaIntegration(usersHandler), { authorizer });
+    
+    // Catch-all for other user routes
     users.addResource('{proxy+}').addMethod('ANY', new apigateway.LambdaIntegration(usersHandler), { authorizer });
 
     const friends = v1.addResource('friends');
@@ -115,7 +127,24 @@ export class ApiStack extends Construct {
     friends.addResource('{proxy+}').addMethod('ANY', new apigateway.LambdaIntegration(friendsHandler), { authorizer });
 
     const postcards = v1.addResource('postcards');
-    postcards.addMethod('ANY', new apigateway.LambdaIntegration(postcardsHandler), { authorizer });
+    postcards.addMethod('POST', new apigateway.LambdaIntegration(postcardsHandler), { authorizer });
+    postcards.addMethod('GET', new apigateway.LambdaIntegration(postcardsHandler), { authorizer });
+    
+    // Specific routes for sent and received postcards
+    const postCardsSent = postcards.addResource('sent');
+    postCardsSent.addMethod('GET', new apigateway.LambdaIntegration(postcardsHandler), { authorizer });
+    
+    const postCardsReceived = postcards.addResource('received');
+    postCardsReceived.addMethod('GET', new apigateway.LambdaIntegration(postcardsHandler), { authorizer });
+    
+    // Catch-all for other postcard routes
     postcards.addResource('{proxy+}').addMethod('ANY', new apigateway.LambdaIntegration(postcardsHandler), { authorizer });
+
+    // Outputs
+    new cdk.CfnOutput(this, 'ApiUrl', {
+      value: this.api.url,
+      description: 'API Gateway URL',
+      exportName: `${stage}-PostiiApiUrl`,
+    });
   }
 }

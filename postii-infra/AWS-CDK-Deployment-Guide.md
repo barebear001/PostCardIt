@@ -201,7 +201,9 @@ export class DatabaseStack extends Construct {
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      pointInTimeRecovery: stage === 'prod',
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: stage === 'prod',
+      },
       removalPolicy: stage === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
     });
 
@@ -222,7 +224,9 @@ export class DatabaseStack extends Construct {
       partitionKey: { name: 'friendshipId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      pointInTimeRecovery: stage === 'prod',
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: stage === 'prod',
+      },
       removalPolicy: stage === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
     });
 
@@ -245,7 +249,9 @@ export class DatabaseStack extends Construct {
       partitionKey: { name: 'postcardId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      pointInTimeRecovery: stage === 'prod',
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: stage === 'prod',
+      },
       removalPolicy: stage === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
     });
 
@@ -305,7 +311,7 @@ export class StorageStack extends Construct {
     // CloudFront Distribution
     this.distribution = new cloudfront.Distribution(this, 'AssetsDistribution', {
       defaultBehavior: {
-        origin: new origins.S3Origin(this.assetsBucket),
+        origin: origins.S3BucketOrigin.withOriginAccessControl(this.assetsBucket),
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
         cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
@@ -449,32 +455,32 @@ export class ApiStack extends Construct {
 
     // Create Lambda functions
     const authHandler = new lambda.Function(this, 'AuthHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: 'lambda_function.lambda_handler',
       code: lambda.Code.fromAsset('lambda/auth'),
       role: lambdaRole,
       environment: commonEnvironment,
     });
 
     const usersHandler = new lambda.Function(this, 'UsersHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: 'lambda_function.lambda_handler',
       code: lambda.Code.fromAsset('lambda/users'),
       role: lambdaRole,
       environment: commonEnvironment,
     });
 
     const friendsHandler = new lambda.Function(this, 'FriendsHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: 'lambda_function.lambda_handler',
       code: lambda.Code.fromAsset('lambda/friends'),
       role: lambdaRole,
       environment: commonEnvironment,
     });
 
     const postcardsHandler = new lambda.Function(this, 'PostcardsHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: 'lambda_function.lambda_handler',
       code: lambda.Code.fromAsset('lambda/postcards'),
       role: lambdaRole,
       environment: commonEnvironment,
