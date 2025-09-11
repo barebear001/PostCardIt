@@ -4,7 +4,6 @@ import SwiftUI
 struct RegistrationView: View {
     @EnvironmentObject var authService: CognitoAuthService
     @Environment(\.presentationMode) var presentationMode
-    @State private var username = ""
     @State private var email = ""
     @State private var password = ""
     @State private var confirmPassword = ""
@@ -16,7 +15,7 @@ struct RegistrationView: View {
     }
     
     var formIsValid: Bool {
-        return !username.isEmpty && !email.isEmpty && !password.isEmpty &&
+        return !email.isEmpty && !password.isEmpty &&
                passwordsMatch && password.count >= 8
     }
     
@@ -24,10 +23,6 @@ struct RegistrationView: View {
         NavigationView {
             Form {
                 Section(header: Text("Account Information")) {
-                    TextField("Username", text: $username)
-                        .autocapitalization(.none)
-                        .disableAutocorrection(true)
-                    
                     TextField("Email", text: $email)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
@@ -36,9 +31,9 @@ struct RegistrationView: View {
                     TextField("Phone Number (optional)", text: $phoneNumber)
                         .keyboardType(.phonePad)
                     
-                    SecureField("Password (min 8 characters)", text: $password)
+                    TextField("Password (min 8 characters)", text: $password)
                     
-                    SecureField("Confirm Password", text: $confirmPassword)
+                    TextField("Confirm Password", text: $confirmPassword)
                     
                     if !passwordsMatch && !confirmPassword.isEmpty {
                         Text("Passwords do not match")
@@ -58,9 +53,8 @@ struct RegistrationView: View {
                         let phoneNumberToUse = phoneNumber.isEmpty ? nil : phoneNumber
                         
                         authService.signUp(
-                            username: username,
-                            password: password,
                             email: email,
+                            password: password,
                             phoneNumber: phoneNumberToUse
                         ) { success in
                             if success {
@@ -92,7 +86,7 @@ struct RegistrationView: View {
                 presentationMode.wrappedValue.dismiss()
             })
             .sheet(isPresented: $showingConfirmation) {
-                ConfirmationView(username: username)
+                ConfirmationView(email: email)
                     .environmentObject(authService)
             }
         }

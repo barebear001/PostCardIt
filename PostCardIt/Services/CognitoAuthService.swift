@@ -1,38 +1,7 @@
 // CognitoAuthService.swift
 import Foundation
 import AWSCore
-import AWSCognito
 import AWSCognitoIdentityProvider
-
-// Custom identity provider class that implements AWSIdentityProviderManager
-class CognitoIdentityProvider: NSObject, AWSIdentityProviderManager {
-    let poolId: String
-    var idToken: String?
-    let regionString: String
-    
-    init(poolId: String, idToken: String? = nil, regionString: String) {
-        self.poolId = poolId
-        self.idToken = idToken
-        self.regionString = regionString
-        super.init()
-    }
-    
-    func logins() -> AWSTask<NSDictionary> {
-        if let idToken = idToken {
-            let key = "cognito-idp.\(regionString).amazonaws.com/\(poolId)"
-            let dictionary = [key: idToken]
-            return AWSTask(result: dictionary as NSDictionary)
-        }
-        
-        // Return empty dictionary if no token is available (unauthenticated access)
-        return AWSTask(result: [:] as NSDictionary)
-    }
-    
-    // Update the ID token when the user signs in
-    func updateIdToken(_ token: String?) {
-        self.idToken = token
-    }
-}
 
 class CognitoAuthService: ObservableObject {
     @Published var isAuthenticated = false
@@ -41,15 +10,12 @@ class CognitoAuthService: ObservableObject {
     @Published var isLoading = false
     
     private let userPool: AWSCognitoIdentityUserPool
-    private let credentialsProvider: AWSCognitoCredentialsProvider
-    private let identityProvider: CognitoIdentityProvider
     
     // Replace these values with your own Cognito configuration
-    private let cognitoIdentityUserPoolId = "us-east-1_dVWN0cQoG"
-    private let cognitoIdentityUserPoolAppClientId = "3fgbee10voeud8qaqj4tkcsb3a"
-    private let cognitoIdentityPoolId = "us-east-1:d110daff-8047-4d58-826c-ab2088eb689a"
-    private let cognitoRegion = AWSRegionType.USEast1 // Change to your region
-    private let cognitoRegionString = "us-east-1" // String version of your region
+    private let cognitoIdentityUserPoolId = "us-west-2_fqvjbiBDV"
+    private let cognitoIdentityUserPoolAppClientId = "7lj9rpfda574ngkcdv1km6e2hi"
+    private let cognitoRegion = AWSRegionType.USWest2
+    private let cognitoRegionString = "us-west-2"
     
     init() {
         // Configure Cognito User Pool
@@ -73,26 +39,6 @@ class CognitoAuthService: ObservableObject {
         }
         userPool = userPoolInstance
         
-        // Create the identity provider
-        identityProvider = CognitoIdentityProvider(
-            poolId: cognitoIdentityUserPoolId,
-            regionString: cognitoRegionString
-        )
-        
-        // Configure Cognito Identity Pool with the identity provider
-        credentialsProvider = AWSCognitoCredentialsProvider(
-            regionType: cognitoRegion,
-            identityPoolId: cognitoIdentityPoolId,
-            identityProviderManager: identityProvider
-        )
-        
-        let configuration = AWSServiceConfiguration(
-            region: cognitoRegion,
-            credentialsProvider: credentialsProvider
-        )
-        
-        AWSServiceManager.default().defaultServiceConfiguration = configuration
-        
         // Check if user is already signed in
         if let user = userPool.currentUser() {
             self.user = user
@@ -102,13 +48,13 @@ class CognitoAuthService: ObservableObject {
         }
     }
     
-    func signIn(username: String, password: String, completion: @escaping (Bool) -> Void) {
+    func signIn(email: String, password: String, completion: @escaping (Bool) -> Void) {
         isLoading = true
         errorMessage = ""
         
-        user = userPool.getUser(username)
+        user = userPool.getUser(email)
         
-        user?.getSession(username, password: password, validationData: nil).continueWith { [weak self] task -> Any? in
+        user?.getSession(email, password: password, validationData: nil).continueWith { [weak self] task -> Any? in
             guard let self = self else { return AWSTask<AnyObject>.init() }
             self.isLoading = false
             
@@ -118,18 +64,9 @@ class CognitoAuthService: ObservableObject {
                 return AWSTask<AnyObject>.init()
             }
             
-            // Set the ID token in the identity provider
+            // Set the ID token in API client for backend calls
             if let idToken = task.result?.idToken?.tokenString {
-                self.identityProvider.updateIdToken(idToken)
-                
-                // Clear credentials and force a refresh by getting identity ID
-                self.credentialsProvider.clearCredentials()
-                self.credentialsProvider.getIdentityId().continueWith { task in
-                    if let error = task.error {
-                        print("Credentials refresh error: \(error)")
-                    }
-                    return nil
-                }
+                APIClient.shared.setAuthToken(idToken)
             }
             
             self.isAuthenticated = true
@@ -138,7 +75,7 @@ class CognitoAuthService: ObservableObject {
         }
     }
     
-    func signUp(username: String, password: String, email: String, phoneNumber: String?, completion: @escaping (Bool) -> Void) {
+    func signUp(email: String, password: String, phoneNumber: String?, completion: @escaping (Bool) -> Void) {
         isLoading = true
         errorMessage = ""
         
@@ -156,7 +93,7 @@ class CognitoAuthService: ObservableObject {
             attributes.append(phoneAttribute!)
         }
         
-        userPool.signUp(username, password: password, userAttributes: attributes, validationData: nil).continueWith { [weak self] task -> Any? in
+        userPool.signUp(email, password: password, userAttributes: attributes, validationData: nil).continueWith { [weak self] task -> Any? in
             guard let self = self else { return AWSTask<AnyObject>.init() }
             self.isLoading = false
             
@@ -172,11 +109,11 @@ class CognitoAuthService: ObservableObject {
         }
     }
     
-    func confirmSignUp(username: String, confirmationCode: String, completion: @escaping (Bool) -> Void) {
+    func confirmSignUp(email: String, confirmationCode: String, completion: @escaping (Bool) -> Void) {
         isLoading = true
         errorMessage = ""
         
-        let user = userPool.getUser(username)
+        let user = userPool.getUser(email)
         
         user.confirmSignUp(confirmationCode).continueWith { [weak self] task -> Any? in
             guard let self = self else { return AWSTask<AnyObject>.init() }
@@ -193,11 +130,11 @@ class CognitoAuthService: ObservableObject {
         }
     }
     
-    func resendConfirmationCode(username: String, completion: @escaping (Bool) -> Void) {
+    func resendConfirmationCode(email: String, completion: @escaping (Bool) -> Void) {
         isLoading = true
         errorMessage = ""
         
-        let user = userPool.getUser(username)
+        let user = userPool.getUser(email)
         
         user.resendConfirmationCode().continueWith { [weak self] task -> Any? in
             guard let self = self else { return AWSTask<AnyObject>.init() }
@@ -214,11 +151,11 @@ class CognitoAuthService: ObservableObject {
         }
     }
     
-    func forgotPassword(username: String, completion: @escaping (Bool) -> Void) {
+    func forgotPassword(email: String, completion: @escaping (Bool) -> Void) {
         isLoading = true
         errorMessage = ""
         
-        let user = userPool.getUser(username)
+        let user = userPool.getUser(email)
         
         user.forgotPassword().continueWith { [weak self] task -> Any? in
             guard let self = self else { return AWSTask<AnyObject>.init() }
@@ -235,11 +172,11 @@ class CognitoAuthService: ObservableObject {
         }
     }
     
-    func confirmForgotPassword(username: String, newPassword: String, confirmationCode: String, completion: @escaping (Bool) -> Void) {
+    func confirmForgotPassword(email: String, newPassword: String, confirmationCode: String, completion: @escaping (Bool) -> Void) {
         isLoading = true
         errorMessage = ""
         
-        let user = userPool.getUser(username)
+        let user = userPool.getUser(email)
         
         user.confirmForgotPassword(confirmationCode, password: newPassword).continueWith { [weak self] task -> Any? in
             guard let self = self else { return AWSTask<AnyObject>.init() }
@@ -259,12 +196,10 @@ class CognitoAuthService: ObservableObject {
     func signOut() {
         if let user = userPool.currentUser() {
             user.signOut()
-            
-            // Clear the identity provider token and credentials
-            identityProvider.updateIdToken(nil)
-            credentialsProvider.clearKeychain()
-            credentialsProvider.clearCredentials()
         }
+        
+        // Clear auth token from API client
+        APIClient.shared.setAuthToken(nil)
         
         self.user = nil
         self.isAuthenticated = false
@@ -281,22 +216,9 @@ class CognitoAuthService: ObservableObject {
             }
             
             if let idToken = task.result?.idToken?.tokenString {
-                // Update the identity provider with the ID token
-                self.identityProvider.updateIdToken(idToken)
-                
-                // Clear credentials and force a refresh by getting identity ID
-                self.credentialsProvider.clearCredentials()
-                
-                // Use getIdentityId to force a refresh of the credentials
-                self.credentialsProvider.getIdentityId().continueWith { task in
-                    if let error = task.error {
-                        print("Credentials refresh error: \(error)")
-                        completion(false)
-                    } else {
-                        completion(true)
-                    }
-                    return nil
-                }
+                // Set auth token in API client for backend calls
+                APIClient.shared.setAuthToken(idToken)
+                completion(true)
             } else {
                 completion(false)
             }

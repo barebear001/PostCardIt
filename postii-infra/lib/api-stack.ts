@@ -118,9 +118,6 @@ export class ApiStack extends cdk.Stack {
     // Get specific user by ID
     const userById = users.addResource('{userId}');
     userById.addMethod('GET', new apigateway.LambdaIntegration(usersHandler), { authorizer });
-    
-    // Catch-all for other user routes
-    users.addResource('{proxy+}').addMethod('ANY', new apigateway.LambdaIntegration(usersHandler), { authorizer });
 
     const friends = v1.addResource('friends');
     friends.addMethod('ANY', new apigateway.LambdaIntegration(friendsHandler), { authorizer });
@@ -136,9 +133,6 @@ export class ApiStack extends cdk.Stack {
     
     const postCardsReceived = postcards.addResource('received');
     postCardsReceived.addMethod('GET', new apigateway.LambdaIntegration(postcardsHandler), { authorizer });
-    
-    // Catch-all for other postcard routes
-    postcards.addResource('{proxy+}').addMethod('ANY', new apigateway.LambdaIntegration(postcardsHandler), { authorizer });
 
     // Outputs
     new cdk.CfnOutput(this, 'ApiUrl', {

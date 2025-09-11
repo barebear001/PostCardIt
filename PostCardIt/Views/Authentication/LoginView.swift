@@ -89,7 +89,7 @@ struct LoginView: View {
                                 HStack {
                                     HStack {
                                         if password.isEmpty {
-                                            Text("enter codes")
+                                            Text("enter password")
                                                 .font(.custom("Kalam", size: 14))
                                                 .foregroundColor(Color.black.opacity(0.35))
                                         }
@@ -98,19 +98,19 @@ struct LoginView: View {
                                     .padding(.leading, 15)
                                     
                                     // Send codes button
-                                    Button(action: {
-                                        // Send verification codes
-                                    }) {
-                                        Text("Send codes")
-                                            .font(.custom("Kalam-Light", size: 12))
-                                            .foregroundColor(.black)
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 6)
-                                            .background(Color(red: 1.0, green: 0.9, blue: 0.38))
-                                            .cornerRadius(18)
-                                            .shadow(color: Color.black.opacity(0.25), radius: 1, x: 1, y: 1)
-                                    }
-                                    .padding(.trailing, 8)
+//                                    Button(action: {
+//                                        // Send verification codes
+//                                    }) {
+//                                        Text("Send codes")
+//                                            .font(.custom("Kalam-Light", size: 12))
+//                                            .foregroundColor(.black)
+//                                            .padding(.horizontal, 12)
+//                                            .padding(.vertical, 6)
+//                                            .background(Color(red: 1.0, green: 0.9, blue: 0.38))
+//                                            .cornerRadius(18)
+//                                            .shadow(color: Color.black.opacity(0.25), radius: 1, x: 1, y: 1)
+//                                    }
+//                                    .padding(.trailing, 8)
                                 }
                                 
                                 SecureField("", text: $password)
@@ -128,7 +128,7 @@ struct LoginView: View {
                             
                             // Continue button
                             Button(action: {
-                                authService.signIn(username: email, password: password) { success in
+                                authService.signIn(email: email, password: password) { success in
                                     // Handle success in environment object
                                 }
                             }) {
@@ -143,7 +143,7 @@ struct LoginView: View {
                                             .progressViewStyle(CircularProgressViewStyle())
                                             .foregroundColor(Color.black.opacity(0.5))
                                     } else {
-                                        Text("Continue")
+                                        Text("log in")
                                             .font(.custom("Kalam-Light", size: 14))
                                             .foregroundColor(Color.black.opacity(0.5))
                                     }
@@ -153,6 +153,17 @@ struct LoginView: View {
                             .padding(.horizontal, 33)
                         }
                         .padding(.horizontal, 33)
+                        
+                        // Sign up button
+                        Button(action: {
+                            showingRegistration = true
+                        }) {
+                            Text("Don't have an account? Sign up")
+                                .font(.custom("Kalam", size: 14))
+                                .foregroundColor(.blue)
+                                .underline()
+                        }
+                        .padding(.top, 10)
                         
                         // Or divider
                         Text("or")

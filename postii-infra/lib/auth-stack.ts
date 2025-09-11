@@ -18,11 +18,12 @@ export class AuthStack extends cdk.Stack {
     // Cognito User Pool
     this.userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName: `postii-users-${stage}`,
-      signInAliases: { email: true, username: true },
+      signInAliases: { email: true },
       selfSignUpEnabled: true,
+      autoVerify: { email: true },
       userVerification: {
-        emailSubject: 'Welcome to Postii!',
-        emailBody: 'Hello {username}, your verification code is {####}',
+        emailSubject: 'Verify your Postii account',
+        emailBody: 'Hello, your verification code is {####}. Welcome to Postii!',
         emailStyle: cognito.VerificationEmailStyle.CODE,
       },
       passwordPolicy: {
@@ -31,6 +32,12 @@ export class AuthStack extends cdk.Stack {
         requireUppercase: true,
         requireDigits: true,
         requireSymbols: false,
+      },
+      standardAttributes: {
+        email: {
+          required: true,
+          mutable: true,
+        },
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       removalPolicy: stage === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,

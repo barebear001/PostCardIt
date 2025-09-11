@@ -15,157 +15,174 @@ class PostcardService: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage = ""
     
-    // S3 configuration
-    private let bucketName = "postcard-it-beta"
-    private let region: AWSRegionType = .USEast1 // Change to your region
+    // API client for backend communication
+    private let apiClient = APIClient.shared
     
-    // AWS DynamoDB or API Gateway endpoint for postcard data
-    private let apiEndpoint = "YOUR_API_ENDPOINT"
+    // S3 configuration for image uploads
+    private let bucketName = AppConfig.AWS.s3BucketName
+    private let region: AWSRegionType = .USWest2
     
     // Fetch postcards for the user
     func fetchUserPostcards(userId: String) {
+        Task {
+            await fetchPostcards()
+        }
+    }
+    
+    @MainActor
+    private func fetchPostcards() async {
         isLoading = true
+        errorMessage = ""
         
-        // This is a placeholder for your actual API calls
-        // In a real implementation, you would call your AWS API Gateway or Lambda function
-        // to fetch postcards from DynamoDB or other data source
-        
-        // Simulate API call with a delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            // Placeholder data for sent postcards
-            self.sentPostcards = [
-                Postcard(
-                    senderId: userId,
-                    senderName: "You",
-                    recipientName: "John",
-                    message: "Hello from Paris! Having a wonderful time here.",
-                    country: "France",
-                    createdAt: Date().addingTimeInterval(-86400 * 7), // 7 days ago
-                    isSent: true
-                ),
-                Postcard(
-                    senderId: userId,
-                    senderName: "You",
-                    recipientName: "Sarah",
-                    message: "Greetings from Tokyo! The cherry blossoms are beautiful.",
-                    country: "Japan",
-                    createdAt: Date().addingTimeInterval(-86400 * 14), // 14 days ago
-                    isSent: true
-                )
-            ]
+        do {
+            // Fetch sent and received postcards concurrently
+            async let sentResponse: PostcardResponse = apiClient.get(.postcardsSent, responseType: PostcardResponse.self)
+            async let receivedResponse: PostcardResponse = apiClient.get(.postcardsReceived, responseType: PostcardResponse.self)
             
-            // Placeholder data for received postcards
-            self.receivedPostcards = [
-                Postcard(
-                    senderId: "user123",
-                    senderName: "Alice",
-                    recipientId: userId,
-                    recipientName: "You",
-                    message: "Hello from New York! The city is amazing.",
-                    country: "United States",
-                    createdAt: Date().addingTimeInterval(-86400 * 3), // 3 days ago
-                    isSent: true
-                ),
-                Postcard(
-                    senderId: "user456",
-                    senderName: "Bob",
-                    recipientId: userId,
-                    recipientName: "You",
-                    message: "Greetings from Rome! The Colosseum is magnificent.",
-                    country: "Italy",
-                    createdAt: Date().addingTimeInterval(-86400 * 10), // 10 days ago
-                    isSent: true
-                )
-            ]
+            let (sent, received) = try await (sentResponse, receivedResponse)
+            
+            // Convert API models to app models and resolve user names
+            self.sentPostcards = await resolveUserNames(for: sent.postcards.map { $0.toPostcard() })
+            self.receivedPostcards = await resolveUserNames(for: received.postcards.map { $0.toPostcard() })
             
             self.isLoading = false
+            
+        } catch {
+            self.isLoading = false
+            self.errorMessage = error.localizedDescription
+            print("Error fetching postcards: \(error)")
+        }
+    }
+    
+    // Helper method to resolve user names for postcards
+    private func resolveUserNames(for postcards: [Postcard]) async -> [Postcard] {
+        var updatedPostcards = postcards
+        
+        for i in 0..<updatedPostcards.count {
+            let postcard = updatedPostcards[i]
+            
+            // Resolve sender name
+            if let senderUser = await fetchUserById(postcard.senderId) {
+                updatedPostcards[i].senderName = senderUser.fullName ?? senderUser.username
+            }
+            
+            // Resolve recipient name
+            if let recipientId = postcard.recipientId,
+               let recipientUser = await fetchUserById(recipientId) {
+                updatedPostcards[i].recipientName = recipientUser.fullName ?? recipientUser.username
+            }
+        }
+        
+        return updatedPostcards
+    }
+    
+    // Fetch user by ID for resolving names
+    private func fetchUserById(_ userId: String) async -> UserResponse? {
+        do {
+            return try await apiClient.get(.userById(userId), responseType: UserResponse.self)
+        } catch {
+            print("Error fetching user \(userId): \(error)")
+            return nil
         }
     }
     
     // Send a new postcard
     func sendPostcard(postcard: Postcard, image: UIImage?, completion: @escaping (Bool, String?) -> Void) {
+        Task {
+            await sendPostcardAsync(postcard: postcard, image: image, completion: completion)
+        }
+    }
+    
+    @MainActor
+    private func sendPostcardAsync(postcard: Postcard, image: UIImage?, completion: @escaping (Bool, String?) -> Void) async {
         isLoading = true
+        errorMessage = ""
         
-        // If we have an image, upload it to S3 first
-        if let image = image {
-            uploadImage(image: image, postcardId: postcard.id) { [weak self] success, imageKey in
-                guard let self = self else { return }
-                
-                if !success {
-                    self.isLoading = false
-                    completion(false, "Failed to upload image")
-                    return
-                }
-                
-                // Now create the postcard with the image key
-                var updatedPostcard = postcard
-                updatedPostcard.imageKey = imageKey
-                
-                self.createPostcardRecord(postcard: updatedPostcard) { success, error in
-                    self.isLoading = false
-                    completion(success, error)
-                }
+        do {
+            var imageUrl: String?
+            
+            // If we have an image, upload it to S3 first
+            if let image = image {
+                imageUrl = try await uploadImageAsync(image: image, postcardId: postcard.id)
             }
-        } else {
-            // No image, just create the postcard record
-            createPostcardRecord(postcard: postcard) { [weak self] success, error in
-                self?.isLoading = false
-                completion(success, error)
-            }
-        }
-    }
-    
-    // Private helper method to create a postcard record in the database
-    private func createPostcardRecord(postcard: Postcard, completion: @escaping (Bool, String?) -> Void) {
-        // This is a placeholder for your actual API calls
-        // In a real implementation, you would call your AWS API Gateway or Lambda function
-        // to save the postcard data to DynamoDB or other data source
-        
-        // Simulate API call with a delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            // For demo purposes, we'll just simulate success
+            
+            // Create postcard request
+            let postcardRequest = PostcardRequest(
+                recipientId: postcard.recipientId ?? "",
+                imageUrl: imageUrl,
+                message: postcard.message,
+                location: PostcardLocation(
+                    latitude: nil,
+                    longitude: nil,
+                    address: nil,
+                    city: nil,
+                    country: postcard.country.isEmpty ? nil : postcard.country
+                )
+            )
+            
+            // Send postcard via API
+            let response = try await apiClient.post(.postcards, body: postcardRequest, responseType: PostcardAPIModel.self)
+            
+            // Add to sent postcards locally
+            let newPostcard = response.toPostcard()
+            self.sentPostcards.insert(newPostcard, at: 0)
+            
+            self.isLoading = false
             completion(true, nil)
+            
+        } catch {
+            self.isLoading = false
+            self.errorMessage = error.localizedDescription
+            completion(false, error.localizedDescription)
         }
     }
     
-    // Private helper method to upload an image to S3
-    private func uploadImage(image: UIImage, postcardId: String, completion: @escaping (Bool, String?) -> Void) {
+    // Private async helper method to upload an image to S3
+    private func uploadImageAsync(image: UIImage, postcardId: String) async throws -> String {
         guard let imageData = image.jpegData(compressionQuality: 0.7) else {
-            completion(false, "Failed to process image")
-            return
+            throw APIError.badRequest("Failed to process image")
         }
         
         // Create a unique key for the image
         let imageKey = "postcards/\(postcardId)/original.jpg"
         
-        // Configure S3 transfer manager
-        let transferManager = AWSS3TransferManager.default()
+        // Create temporary file URL
+        let tempUrl = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(postcardId)
         
-        // Create upload request
-        let uploadRequest = AWSS3TransferManagerUploadRequest()
-        uploadRequest?.bucket = bucketName
-        uploadRequest?.key = imageKey
-        uploadRequest?.body = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(postcardId)
-        uploadRequest?.contentType = "image/jpeg"
-        uploadRequest?.acl = .publicRead
-        
-        // Write image data to temporary file
         do {
-            try imageData.write(to: uploadRequest?.body ?? URL(fileURLWithPath: ""))
-        } catch {
-            completion(false, "Failed to prepare image for upload: \(error.localizedDescription)")
-            return
-        }
-        
-        // Perform upload
-        transferManager.upload(uploadRequest!).continueWith { task in
-            if let error = task.error {
-                completion(false, "Upload failed: \(error.localizedDescription)")
-                return nil
-            }
+            // Write image data to temporary file
+            try imageData.write(to: tempUrl)
             
-            completion(true, imageKey)
-            return nil
+            // Configure S3 transfer manager
+            let transferManager = AWSS3TransferManager.default()
+            
+            // Create upload request
+            let uploadRequest = AWSS3TransferManagerUploadRequest()
+            uploadRequest?.bucket = bucketName
+            uploadRequest?.key = imageKey
+            uploadRequest?.body = tempUrl
+            uploadRequest?.contentType = "image/jpeg"
+            uploadRequest?.acl = .publicRead
+            
+            // Perform upload
+            return try await withCheckedThrowingContinuation { continuation in
+                transferManager.upload(uploadRequest!).continueWith { task in
+                    // Clean up temporary file
+                    try? FileManager.default.removeItem(at: tempUrl)
+                    
+                    if let error = task.error {
+                        continuation.resume(throwing: APIError.networkError("Upload failed: \(error.localizedDescription)"))
+                        return nil
+                    }
+                    
+                    continuation.resume(returning: imageKey)
+                    return nil
+                }
+            }
+        } catch {
+            // Clean up temporary file in case of error
+            try? FileManager.default.removeItem(at: tempUrl)
+            throw error
         }
     }
     
@@ -177,16 +194,55 @@ class PostcardService: ObservableObject {
     
     // Delete a postcard
     func deletePostcard(postcardId: String, completion: @escaping (Bool, String?) -> Void) {
+        Task {
+            await deletePostcardAsync(postcardId: postcardId, completion: completion)
+        }
+    }
+    
+    @MainActor
+    private func deletePostcardAsync(postcardId: String, completion: @escaping (Bool, String?) -> Void) async {
         isLoading = true
+        errorMessage = ""
         
-        // This is a placeholder for your actual API calls
-        // In a real implementation, you would call your AWS API Gateway or Lambda function
-        // to delete the postcard from DynamoDB and optionally the image from S3
-        
-        // Simulate API call with a delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        do {
+            // Create endpoint for specific postcard
+            let endpoint = APIConfig.Endpoint.postcards
+            let deleteUrl = endpoint.url.appendingPathComponent(postcardId)
+            
+            // Create a custom endpoint for deletion
+            var request = URLRequest(url: deleteUrl)
+            request.httpMethod = "DELETE"
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            
+            // We'll need to create a way to access the auth token through APIClient
+            // For now, this is a placeholder - the auth token should be managed by the auth service
+            
+            let (_, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw APIError.networkError("Invalid response")
+            }
+            
+            if httpResponse.statusCode >= 400 {
+                throw APIError.serverError(httpResponse.statusCode, "Failed to delete postcard")
+            }
+            
+            // Remove from local arrays
+            self.sentPostcards.removeAll { $0.id == postcardId }
+            self.receivedPostcards.removeAll { $0.id == postcardId }
+            
             self.isLoading = false
             completion(true, nil)
+            
+        } catch {
+            self.isLoading = false
+            self.errorMessage = error.localizedDescription
+            completion(false, error.localizedDescription)
         }
+    }
+    
+    // Set auth token for API calls
+    func setAuthToken(_ token: String?) {
+        apiClient.setAuthToken(token)
     }
 }

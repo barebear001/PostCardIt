@@ -5,7 +5,7 @@ struct ConfirmationView: View {
     @EnvironmentObject var authService: CognitoAuthService
     @Environment(\.presentationMode) var presentationMode
     @State private var confirmationCode = ""
-    let username: String
+    let email: String
     
     var body: some View {
         NavigationView {
@@ -29,7 +29,7 @@ struct ConfirmationView: View {
                 Section {
                     Button(action: {
                         authService.confirmSignUp(
-                            username: username,
+                            email: email,
                             confirmationCode: confirmationCode
                         ) { success in
                             if success {
@@ -61,7 +61,7 @@ struct ConfirmationView: View {
                 
                 Section {
                     Button(action: {
-                        authService.resendConfirmationCode(username: username) { _ in
+                        authService.resendConfirmationCode(email: email) { _ in
                             // Code sent, no additional action needed
                         }
                     }) {

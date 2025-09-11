@@ -4,21 +4,22 @@ import SwiftUI
 struct ForgotPasswordView: View {
     @EnvironmentObject var authService: CognitoAuthService
     @Environment(\.presentationMode) var presentationMode
-    @State private var username = ""
+    @State private var email = ""
     @State private var showingResetConfirmation = false
     
     var body: some View {
         NavigationView {
             Form {
                 Section(header: Text("Reset Password")) {
-                    Text("Enter your username and we'll send a code to your registered email address.")
+                    Text("Enter your email address and we'll send a reset code to you.")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                         .padding(.vertical, 5)
                     
-                    TextField("Username", text: $username)
+                    TextField("Email", text: $email)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
+                        .keyboardType(.emailAddress)
                     
                     if !authService.errorMessage.isEmpty {
                         Text(authService.errorMessage)
@@ -29,7 +30,7 @@ struct ForgotPasswordView: View {
                 
                 Section {
                     Button(action: {
-                        authService.forgotPassword(username: username) { success in
+                        authService.forgotPassword(email: email) { success in
                             if success {
                                 showingResetConfirmation = true
                             }
@@ -50,7 +51,7 @@ struct ForgotPasswordView: View {
                             }
                         }
                     }
-                    .disabled(username.isEmpty || authService.isLoading)
+                    .disabled(email.isEmpty || authService.isLoading)
                 }
             }
             .navigationTitle("Reset Password")
@@ -58,7 +59,7 @@ struct ForgotPasswordView: View {
                 presentationMode.wrappedValue.dismiss()
             })
             .sheet(isPresented: $showingResetConfirmation) {
-                ResetPasswordConfirmationView(username: username)
+                ResetPasswordConfirmationView(email: email)
                     .environmentObject(authService)
             }
         }

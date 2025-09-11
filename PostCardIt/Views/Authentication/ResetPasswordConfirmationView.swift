@@ -7,7 +7,7 @@ struct ResetPasswordConfirmationView: View {
     @State private var verificationCode = ""
     @State private var newPassword = ""
     @State private var confirmPassword = ""
-    let username: String
+    let email: String
     
     var passwordsMatch: Bool {
         return newPassword == confirmPassword
@@ -50,7 +50,7 @@ struct ResetPasswordConfirmationView: View {
                 Section {
                     Button(action: {
                         authService.confirmForgotPassword(
-                            username: username,
+                            email: email,
                             newPassword: newPassword,
                             confirmationCode: verificationCode
                         ) { success in
